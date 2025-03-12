@@ -2,7 +2,7 @@
 
 A static website that helps you track your 100-day study streak challenge. The application allows you to track your daily study habits, log your progress, and maintain a streak counter for consistent studying.
 
-![Screenshot of the 100-Day Study Streak Tracker](assets/images/screenshot.png)
+
 
 ## Features
 
