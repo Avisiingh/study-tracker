@@ -149,14 +149,39 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Modal triggers
+    // Modal triggers and close functionality
     const showRegisterBtn = document.getElementById('showRegisterForm');
     const forgotPasswordLink = document.getElementById('forgotPasswordLink');
+    const registerModal = document.getElementById('registerModal');
+    const recoveryModal = document.getElementById('recoveryModal');
+    
+    // Function to close modal
+    function closeModal(modal) {
+        if (modal) {
+            modal.style.display = 'none';
+            // Reset forms when closing modals
+            const form = modal.querySelector('form');
+            if (form) {
+                form.reset();
+            }
+            // Hide any error messages
+            const errorMessage = modal.querySelector('.error-message');
+            if (errorMessage) {
+                errorMessage.style.display = 'none';
+            }
+            // Hide security question container in recovery modal
+            if (modal.id === 'recoveryModal') {
+                const securityQuestionContainer = document.getElementById('security-question-container');
+                if (securityQuestionContainer) {
+                    securityQuestionContainer.style.display = 'none';
+                }
+            }
+        }
+    }
     
     if (showRegisterBtn) {
         showRegisterBtn.addEventListener('click', function(e) {
             e.preventDefault();
-            const registerModal = document.getElementById('registerModal');
             if (registerModal) {
                 registerModal.style.display = 'flex';
             }
@@ -166,24 +191,37 @@ document.addEventListener('DOMContentLoaded', function() {
     if (forgotPasswordLink) {
         forgotPasswordLink.addEventListener('click', function(e) {
             e.preventDefault();
-            const recoveryModal = document.getElementById('recoveryModal');
             if (recoveryModal) {
                 recoveryModal.style.display = 'flex';
             }
         });
     }
     
-    // Close modal functionality
+    // Close modal with × button
     document.querySelectorAll('.close-modal').forEach(button => {
-        button.addEventListener('click', function() {
-            this.closest('.modal').style.display = 'none';
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const modal = this.closest('.modal');
+            closeModal(modal);
         });
     });
     
     // Close modals when clicking outside
     window.addEventListener('click', function(e) {
         if (e.target.classList.contains('modal')) {
-            e.target.style.display = 'none';
+            closeModal(e.target);
+        }
+    });
+    
+    // Close modals with Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            if (registerModal && registerModal.style.display === 'flex') {
+                closeModal(registerModal);
+            }
+            if (recoveryModal && recoveryModal.style.display === 'flex') {
+                closeModal(recoveryModal);
+            }
         }
     });
 
