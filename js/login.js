@@ -338,6 +338,15 @@
             });
         }
         
+        // Forgot password link
+        const forgotPasswordLink = document.getElementById('forgot-password-link');
+        if (forgotPasswordLink) {
+            forgotPasswordLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                showPasswordRecoveryModal();
+            });
+        }
+        
         // Register form
         const registerForm = document.getElementById('register-form');
         if (registerForm) {
@@ -557,6 +566,207 @@
         };
     }
 
+    // Show password recovery modal
+    function showPasswordRecoveryModal() {
+        // Create modal if it doesn't exist
+        let recoveryModal = document.getElementById('password-recovery-modal');
+        if (!recoveryModal) {
+            recoveryModal = document.createElement('div');
+            recoveryModal.id = 'password-recovery-modal';
+            recoveryModal.className = 'modal';
+            recoveryModal.innerHTML = `
+                <div class="modal-content">
+                    <span class="close-modal">&times;</span>
+                    <h2>Password Recovery</h2>
+                    <div id="recovery-step-1" class="recovery-step">
+                        <p>Enter your email address to recover your password:</p>
+                        <div class="form-group">
+                            <label for="recovery-email">Email</label>
+                            <input type="email" id="recovery-email" required>
+                        </div>
+                        <p id="recovery-error" class="error-message"></p>
+                        <button id="find-account-btn" class="primary-btn">Find Account</button>
+                    </div>
+                    <div id="recovery-step-2" class="recovery-step" style="display:none;">
+                        <p>Please answer your security question:</p>
+                        <div class="form-group">
+                            <label id="security-question-label">Security Question</label>
+                            <input type="text" id="security-answer" required>
+                        </div>
+                        <p id="recovery-answer-error" class="error-message"></p>
+                        <button id="verify-answer-btn" class="primary-btn">Verify Answer</button>
+                    </div>
+                    <div id="recovery-step-3" class="recovery-step" style="display:none;">
+                        <p>Create a new password:</p>
+                        <div class="form-group">
+                            <label for="new-recovery-password">New Password</label>
+                            <input type="password" id="new-recovery-password" required>
+                            <small>Password must be at least 6 characters with one uppercase letter and one number</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="confirm-recovery-password">Confirm New Password</label>
+                            <input type="password" id="confirm-recovery-password" required>
+                        </div>
+                        <p id="recovery-password-error" class="error-message"></p>
+                        <button id="reset-password-btn" class="primary-btn">Reset Password</button>
+                    </div>
+                    <div id="recovery-step-4" class="recovery-step" style="display:none;">
+                        <div class="success-message">
+                            <i class="fas fa-check-circle"></i>
+                            <h3>Password Reset Successful!</h3>
+                            <p>Your password has been reset. You can now log in with your new password.</p>
+                            <button id="back-to-login-btn" class="primary-btn">Back to Login</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(recoveryModal);
+            
+            // Add event listeners for recovery
+            const closeBtn = recoveryModal.querySelector('.close-modal');
+            closeBtn.addEventListener('click', () => {
+                recoveryModal.style.display = 'none';
+            });
+            
+            // Step 1: Find account
+            document.getElementById('find-account-btn').addEventListener('click', findUserAccount);
+            
+            // Step 2: Verify security answer
+            document.getElementById('verify-answer-btn').addEventListener('click', verifySecurityAnswer);
+            
+            // Step 3: Reset password
+            document.getElementById('reset-password-btn').addEventListener('click', resetPassword);
+            
+            // Step 4: Back to login
+            document.getElementById('back-to-login-btn').addEventListener('click', () => {
+                recoveryModal.style.display = 'none';
+            });
+        }
+        
+        // Show the modal and reset to step 1
+        recoveryModal.style.display = 'flex';
+        document.getElementById('recovery-step-1').style.display = 'block';
+        document.getElementById('recovery-step-2').style.display = 'none';
+        document.getElementById('recovery-step-3').style.display = 'none';
+        document.getElementById('recovery-step-4').style.display = 'none';
+        document.getElementById('recovery-email').value = '';
+        document.getElementById('recovery-error').style.display = 'none';
+    }
+    
+    // Find user account for password recovery
+    function findUserAccount() {
+        const email = document.getElementById('recovery-email').value;
+        const errorElement = document.getElementById('recovery-error');
+        errorElement.style.display = 'none';
+        
+        // Find user with the provided email
+        const users = JSON.parse(localStorage.getItem('studyTrackerUsers') || '[]');
+        const user = users.find(u => u.email === email);
+        
+        if (!user) {
+            errorElement.textContent = 'No account found with this email address';
+            errorElement.style.display = 'block';
+            return;
+        }
+        
+        // Move to step 2 and create a security question
+        document.getElementById('recovery-step-1').style.display = 'none';
+        document.getElementById('recovery-step-2').style.display = 'block';
+        
+        // Generate a security question based on the user's data
+        let securityQuestion;
+        if (user.dateRegistered) {
+            // Ask when they registered (make it a bit easier by only asking for the date)
+            const registrationDate = new Date(user.dateRegistered);
+            const formattedDate = registrationDate.toLocaleDateString();
+            securityQuestion = `What date did you register your account? (Format: ${new Date().toLocaleDateString().replace(/\d+/g, '#')})`;
+            
+            // Store the expected answer for validation
+            recoveryModal.dataset.expectedAnswer = formattedDate;
+        } else {
+            // Fallback question based on username
+            securityQuestion = `What is your username?`;
+            recoveryModal.dataset.expectedAnswer = user.username;
+        }
+        
+        // Store the user email for future reference
+        recoveryModal.dataset.recoveryEmail = email;
+        
+        // Update the question in the UI
+        document.getElementById('security-question-label').textContent = securityQuestion;
+    }
+    
+    // Verify security answer
+    function verifySecurityAnswer() {
+        const userAnswer = document.getElementById('security-answer').value;
+        const expectedAnswer = document.getElementById('password-recovery-modal').dataset.expectedAnswer;
+        const errorElement = document.getElementById('recovery-answer-error');
+        errorElement.style.display = 'none';
+        
+        if (!userAnswer || userAnswer.trim() !== expectedAnswer) {
+            errorElement.textContent = 'Incorrect answer. Please try again.';
+            errorElement.style.display = 'block';
+            return;
+        }
+        
+        // Move to step 3 for password reset
+        document.getElementById('recovery-step-2').style.display = 'none';
+        document.getElementById('recovery-step-3').style.display = 'block';
+    }
+    
+    // Reset password
+    function resetPassword() {
+        const newPassword = document.getElementById('new-recovery-password').value;
+        const confirmPassword = document.getElementById('confirm-recovery-password').value;
+        const errorElement = document.getElementById('recovery-password-error');
+        errorElement.style.display = 'none';
+        
+        // Validate passwords
+        if (newPassword !== confirmPassword) {
+            errorElement.textContent = 'Passwords do not match';
+            errorElement.style.display = 'block';
+            return;
+        }
+        
+        if (newPassword.length < 6) {
+            errorElement.textContent = 'Password must be at least 6 characters';
+            errorElement.style.display = 'block';
+            return;
+        }
+        
+        if (!/[A-Z]/.test(newPassword)) {
+            errorElement.textContent = 'Password must contain at least one uppercase letter';
+            errorElement.style.display = 'block';
+            return;
+        }
+        
+        if (!/[0-9]/.test(newPassword)) {
+            errorElement.textContent = 'Password must contain at least one number';
+            errorElement.style.display = 'block';
+            return;
+        }
+        
+        // Get the user email from the data attribute
+        const email = document.getElementById('password-recovery-modal').dataset.recoveryEmail;
+        
+        // Update the user's password in storage
+        const users = JSON.parse(localStorage.getItem('studyTrackerUsers') || '[]');
+        const userIndex = users.findIndex(u => u.email === email);
+        
+        if (userIndex !== -1) {
+            // Update with hashed password
+            users[userIndex].hashedPassword = hashPassword(newPassword);
+            localStorage.setItem('studyTrackerUsers', JSON.stringify(users));
+            
+            // Show success message
+            document.getElementById('recovery-step-3').style.display = 'none';
+            document.getElementById('recovery-step-4').style.display = 'block';
+        } else {
+            errorElement.textContent = 'An error occurred. Please try again.';
+            errorElement.style.display = 'block';
+        }
+    }
+
     // Initialize when the DOM is ready
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', function() {
@@ -577,6 +787,7 @@
         register,
         getCurrentUser,
         exportUserData,
-        showChangePasswordModal
+        showChangePasswordModal,
+        showPasswordRecoveryModal
     };
 })(); 
