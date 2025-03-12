@@ -402,6 +402,8 @@ function handlePasswordRecovery(event) {
 
 // Update UI based on authentication state
 function updateAuthUI() {
+    console.log('Updating UI with user state:', userState);
+    
     // First, ensure we have a header
     let header = document.querySelector('header');
     if (!header) {
@@ -412,9 +414,24 @@ function updateAuthUI() {
         // Create app title
         const appTitle = document.createElement('div');
         appTitle.className = 'app-title';
-        appTitle.innerHTML = '<i class="fas fa-book-reader"></i> Study Tracker';
-        appTitle.onclick = () => redirectToHome();
+        appTitle.innerHTML = '<i class="fas fa-book"></i> Study Tracker';
         header.appendChild(appTitle);
+        
+        // Create navigation
+        const nav = document.createElement('nav');
+        nav.className = 'main-nav';
+        nav.innerHTML = `
+            <a href="#" class="nav-item active" data-page="dashboard">
+                <i class="fas fa-home"></i> Dashboard
+            </a>
+            <a href="#" class="nav-item" data-page="subjects">
+                <i class="fas fa-book-open"></i> Subjects
+            </a>
+            <a href="#" class="nav-item" data-page="progress">
+                <i class="fas fa-chart-line"></i> Progress
+            </a>
+        `;
+        header.appendChild(nav);
         
         // Create header right section
         const headerRight = document.createElement('div');
@@ -443,10 +460,8 @@ function updateAuthUI() {
     
     if (!userProfileContainer) {
         userProfileContainer = createUserProfileContainer();
-        headerRight.insertBefore(userProfileContainer, headerRight.firstChild);
+        headerRight.appendChild(userProfileContainer);
     }
-    
-    console.log('Updating UI with user state:', userState);
     
     if (userState.isLoggedIn) {
         // Hide login-related elements
@@ -464,439 +479,259 @@ function updateAuthUI() {
             userName.textContent = userState.username;
         }
         
-        // Add header styles
-        const headerStyles = document.createElement('style');
-        headerStyles.textContent = `
+        // Add styles
+        const styles = document.createElement('style');
+        styles.textContent = `
             :root {
-                --primary-color: #4a90e2;
-                --primary-dark: #357abd;
-                --secondary-color: #6c757d;
-                --success-color: #28a745;
-                --danger-color: #dc3545;
-                --warning-color: #ffc107;
-                --info-color: #17a2b8;
-                --background-color: #f8f9fa;
-                --card-background: #ffffff;
+                --primary-color: #2196F3;
+                --primary-dark: #1976D2;
+                --secondary-color: #FFC107;
+                --success-color: #4CAF50;
+                --danger-color: #F44336;
                 --text-primary: #333333;
                 --text-secondary: #666666;
-                --text-muted: #999999;
-                --border-color: #e9ecef;
+                --background-color: #F5F7FA;
+                --card-background: #FFFFFF;
+                --border-color: #E0E0E0;
                 --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
                 --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
-                --shadow-lg: 0 10px 15px rgba(0,0,0,0.1);
                 --radius-sm: 4px;
                 --radius-md: 8px;
-                --radius-lg: 12px;
-                --spacing-xs: 0.25rem;
-                --spacing-sm: 0.5rem;
-                --spacing-md: 1rem;
-                --spacing-lg: 1.5rem;
-                --spacing-xl: 2rem;
+                --spacing-xs: 0.5rem;
+                --spacing-sm: 1rem;
+                --spacing-md: 1.5rem;
+                --spacing-lg: 2rem;
             }
 
             body {
                 background-color: var(--background-color);
                 color: var(--text-primary);
-                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-                line-height: 1.5;
+                font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
                 margin: 0;
                 padding: 0;
+                min-height: 100vh;
             }
             
             .app-header {
                 background: var(--card-background);
-                padding: var(--spacing-md) var(--spacing-xl);
+                padding: 0 var(--spacing-lg);
                 display: flex;
-                justify-content: space-between;
                 align-items: center;
-                box-shadow: var(--shadow-md);
+                gap: var(--spacing-md);
+                height: 64px;
+                box-shadow: var(--shadow-sm);
                 position: fixed;
                 top: 0;
                 left: 0;
                 right: 0;
                 z-index: 1000;
-                height: 60px;
             }
             
             .app-title {
-                font-size: 1.5rem;
+                font-size: 1.25rem;
                 font-weight: 600;
                 color: var(--primary-color);
                 display: flex;
                 align-items: center;
-                gap: var(--spacing-sm);
-                cursor: pointer;
-                transition: color 0.2s;
+                gap: var(--spacing-xs);
+                min-width: 200px;
             }
-
-            .app-title:hover {
-                color: var(--primary-dark);
+            
+            .main-nav {
+                display: flex;
+                gap: var(--spacing-sm);
+                flex: 1;
+            }
+            
+            .nav-item {
+                color: var(--text-secondary);
+                text-decoration: none;
+                padding: var(--spacing-xs) var(--spacing-sm);
+                border-radius: var(--radius-sm);
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                font-weight: 500;
+                transition: all 0.2s;
+            }
+            
+            .nav-item:hover {
+                color: var(--primary-color);
+                background: rgba(33, 150, 243, 0.05);
+            }
+            
+            .nav-item.active {
+                color: var(--primary-color);
+                background: rgba(33, 150, 243, 0.1);
             }
             
             .user-profile-container {
                 position: relative;
                 display: flex;
                 align-items: center;
-                gap: var(--spacing-md);
+                gap: var(--spacing-sm);
+                padding: var(--spacing-xs) var(--spacing-sm);
+                border-radius: var(--radius-md);
+                cursor: pointer;
+                transition: all 0.2s;
+            }
+            
+            .user-profile-container:hover {
+                background: rgba(0, 0, 0, 0.05);
             }
             
             .user-avatar {
-                width: 40px;
-                height: 40px;
+                width: 36px;
+                height: 36px;
                 background: var(--primary-color);
                 color: white;
                 border-radius: 50%;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                font-weight: bold;
-                cursor: pointer;
-                transition: transform 0.2s, background-color 0.2s;
-            }
-
-            .user-avatar:hover {
-                transform: scale(1.05);
-                background: var(--primary-dark);
-            }
-            
-            .user-info {
-                display: flex;
-                flex-direction: column;
-                cursor: pointer;
+                font-weight: 600;
+                font-size: 0.875rem;
             }
             
             .user-name {
-                font-weight: 600;
+                font-weight: 500;
                 color: var(--text-primary);
-            }
-            
-            .user-dropdown {
-                position: absolute;
-                top: calc(100% + var(--spacing-sm));
-                right: 0;
-                background: var(--card-background);
-                border-radius: var(--radius-md);
-                box-shadow: var(--shadow-lg);
-                min-width: 220px;
-                display: none;
-                z-index: 1000;
-                border: 1px solid var(--border-color);
-                overflow: hidden;
-            }
-            
-            .user-dropdown.active {
-                display: block;
-                animation: dropdownFadeIn 0.2s ease-out;
-            }
-            
-            @keyframes dropdownFadeIn {
-                from {
-                    opacity: 0;
-                    transform: translateY(-10px);
-                }
-                to {
-                    opacity: 1;
-                    transform: translateY(0);
-                }
-            }
-            
-            .dropdown-item {
-                padding: var(--spacing-md);
-                display: flex;
-                align-items: center;
-                gap: var(--spacing-sm);
-                color: var(--text-primary);
-                text-decoration: none;
-                cursor: pointer;
-                transition: all 0.2s;
-            }
-            
-            .dropdown-item:hover {
-                background: var(--background-color);
-                color: var(--primary-color);
-            }
-
-            .dropdown-item i {
-                width: 20px;
-                color: var(--primary-color);
-                transition: transform 0.2s;
-            }
-
-            .dropdown-item:hover i {
-                transform: translateX(2px);
-            }
-            
-            .dropdown-divider {
-                height: 1px;
-                background: var(--border-color);
-                margin: 0;
             }
             
             .main-content {
                 margin-top: 80px;
-                padding: var(--spacing-xl);
+                padding: var(--spacing-lg);
                 max-width: 1200px;
                 margin-left: auto;
                 margin-right: auto;
             }
-
-            .welcome-message {
-                text-align: center;
-                padding: var(--spacing-xl);
-                background: var(--card-background);
-                border-radius: var(--radius-lg);
-                box-shadow: var(--shadow-md);
-                margin-bottom: var(--spacing-xl);
-            }
-
-            .welcome-message h1 {
-                color: var(--text-primary);
-                margin-bottom: var(--spacing-md);
-                font-size: 2rem;
-            }
-
-            .welcome-message p {
-                color: var(--text-secondary);
-                font-size: 1.1rem;
-                margin: 0;
-            }
             
-            .admin-panel {
-                background: var(--card-background);
-                border-radius: var(--radius-lg);
-                box-shadow: var(--shadow-md);
-                overflow: hidden;
-            }
-            
-            .admin-header {
-                padding: var(--spacing-lg);
-                border-bottom: 1px solid var(--border-color);
-                background: var(--background-color);
-            }
-            
-            .admin-header h2 {
-                margin: 0;
-                color: var(--text-primary);
-                display: flex;
-                align-items: center;
-                gap: var(--spacing-sm);
-                font-size: 1.5rem;
-            }
-            
-            .admin-content {
-                padding: var(--spacing-lg);
-            }
-            
-            .admin-section {
-                display: none;
-            }
-            
-            .admin-section.active {
-                display: block;
-                animation: sectionFadeIn 0.3s ease-out;
-            }
-
-            @keyframes sectionFadeIn {
-                from {
-                    opacity: 0;
-                }
-                to {
-                    opacity: 1;
-                }
-            }
-            
-            .admin-nav {
-                display: flex;
-                gap: var(--spacing-md);
-                margin-top: var(--spacing-md);
-                border-bottom: 1px solid var(--border-color);
-                padding-bottom: var(--spacing-sm);
-            }
-            
-            .admin-nav-item {
-                padding: var(--spacing-sm) var(--spacing-md);
-                border-radius: var(--radius-sm);
-                cursor: pointer;
-                color: var(--text-secondary);
-                transition: all 0.2s;
-                font-weight: 500;
-            }
-            
-            .admin-nav-item:hover {
-                color: var(--primary-color);
-                background: rgba(74, 144, 226, 0.1);
-            }
-            
-            .admin-nav-item.active {
-                background: var(--primary-color);
-                color: white;
-            }
-
-            .stats-grid {
+            .dashboard-grid {
                 display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
                 gap: var(--spacing-md);
-                margin-top: var(--spacing-lg);
+                margin-bottom: var(--spacing-lg);
             }
-
-            .stat-card {
-                background: var(--background-color);
-                padding: var(--spacing-lg);
+            
+            .dashboard-card {
+                background: var(--card-background);
                 border-radius: var(--radius-md);
-                box-shadow: var(--shadow-sm);
-                text-align: center;
-            }
-
-            .stat-card h4 {
-                color: var(--text-secondary);
-                margin: 0 0 var(--spacing-sm);
-                font-size: 1rem;
-            }
-
-            .stat-card p {
-                color: var(--text-primary);
-                font-size: 2rem;
-                font-weight: 600;
-                margin: 0;
-            }
-
-            .user-list {
-                display: grid;
-                gap: var(--spacing-md);
-                margin-top: var(--spacing-lg);
-            }
-
-            .user-item {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
                 padding: var(--spacing-md);
-                background: var(--background-color);
-                border-radius: var(--radius-md);
                 box-shadow: var(--shadow-sm);
             }
-
-            .user-item .user-info {
+            
+            .dashboard-card h3 {
+                margin: 0 0 var(--spacing-sm);
+                color: var(--text-primary);
+                font-size: 1.125rem;
                 display: flex;
                 align-items: center;
-                gap: var(--spacing-md);
-            }
-
-            .user-item .user-avatar {
-                width: 36px;
-                height: 36px;
-                font-size: 0.9rem;
-            }
-
-            .user-item .user-details {
-                display: flex;
-                flex-direction: column;
                 gap: var(--spacing-xs);
             }
-
-            .user-item .user-name {
-                font-weight: 600;
-                color: var(--text-primary);
+            
+            .progress-bar {
+                height: 8px;
+                background: var(--border-color);
+                border-radius: 4px;
+                margin-top: var(--spacing-xs);
             }
-
-            .user-item .user-email {
-                color: var(--text-secondary);
-                font-size: 0.9rem;
-            }
-
-            .user-actions {
-                display: flex;
-                gap: var(--spacing-sm);
-            }
-
-            .admin-btn {
-                padding: var(--spacing-sm) var(--spacing-md);
-                border: none;
-                border-radius: var(--radius-sm);
+            
+            .progress-bar-fill {
+                height: 100%;
                 background: var(--primary-color);
-                color: white;
-                cursor: pointer;
-                display: flex;
-                align-items: center;
-                gap: var(--spacing-sm);
-                font-size: 0.9rem;
-                transition: all 0.2s;
+                border-radius: 4px;
+                transition: width 0.3s ease;
             }
-
-            .admin-btn:hover {
-                background: var(--primary-dark);
-                transform: translateY(-1px);
-            }
-
-            .admin-btn.small {
-                padding: var(--spacing-xs) var(--spacing-sm);
-            }
-
-            .admin-btn.danger {
-                background: var(--danger-color);
-            }
-
-            .admin-btn.danger:hover {
-                background: #c82333;
-            }
-
-            .data-actions {
-                display: flex;
-                gap: var(--spacing-md);
-                margin-top: var(--spacing-lg);
-            }
-
+            
             @media (max-width: 768px) {
                 .app-header {
-                    padding: var(--spacing-md);
+                    padding: 0 var(--spacing-sm);
                 }
-
+                
+                .app-title {
+                    min-width: auto;
+                }
+                
+                .main-nav {
+                    display: none;
+                }
+                
                 .main-content {
-                    padding: var(--spacing-md);
-                }
-
-                .stats-grid {
-                    grid-template-columns: 1fr;
-                }
-
-                .admin-nav {
-                    flex-wrap: wrap;
-                }
-
-                .data-actions {
-                    flex-direction: column;
-                }
-
-                .user-item {
-                    flex-direction: column;
-                    align-items: flex-start;
-                    gap: var(--spacing-md);
-                }
-
-                .user-actions {
-                    width: 100%;
-                    justify-content: flex-end;
+                    padding: var(--spacing-sm);
                 }
             }
         `;
         
-        if (!document.querySelector('style[data-header-styles]')) {
-            headerStyles.setAttribute('data-header-styles', '');
-            document.head.appendChild(headerStyles);
+        if (!document.querySelector('style[data-app-styles]')) {
+            styles.setAttribute('data-app-styles', '');
+            document.head.appendChild(styles);
         }
         
-        // Show welcome message in main content if not in admin view
-        if (!document.querySelector('.admin-panel')) {
-            mainContent.innerHTML = `
-                <div class="welcome-message">
-                    <h1>Welcome back, ${userState.username}! 👋</h1>
-                    <p>Ready to continue your learning journey? Track your study progress and maintain your streak.</p>
+        // Show dashboard content
+        mainContent.innerHTML = `
+            <div class="dashboard-header">
+                <h2>Welcome back, ${userState.username}! 👋</h2>
+                <p>Here's your study progress overview</p>
+            </div>
+            
+            <div class="dashboard-grid">
+                <div class="dashboard-card">
+                    <h3><i class="fas fa-clock"></i> Today's Study Time</h3>
+                    <div class="stat-value">2.5 hours</div>
+                    <div class="progress-bar">
+                        <div class="progress-bar-fill" style="width: 60%;"></div>
+                    </div>
                 </div>
-                <div class="quick-actions">
-                    <!-- Add quick action buttons here -->
+                
+                <div class="dashboard-card">
+                    <h3><i class="fas fa-tasks"></i> Tasks Completed</h3>
+                    <div class="stat-value">8/12</div>
+                    <div class="progress-bar">
+                        <div class="progress-bar-fill" style="width: 75%;"></div>
+                    </div>
                 </div>
-            `;
-        }
+                
+                <div class="dashboard-card">
+                    <h3><i class="fas fa-star"></i> Current Streak</h3>
+                    <div class="stat-value">5 days</div>
+                    <div class="progress-bar">
+                        <div class="progress-bar-fill" style="width: 50%;"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="dashboard-card">
+                <h3><i class="fas fa-calendar"></i> Recent Activity</h3>
+                <div class="activity-list">
+                    <div class="activity-item">
+                        <i class="fas fa-book text-primary"></i>
+                        <span>Completed Mathematics Chapter 5</span>
+                        <span class="activity-time">2 hours ago</span>
+                    </div>
+                    <div class="activity-item">
+                        <i class="fas fa-file-alt text-success"></i>
+                        <span>Submitted Physics Assignment</span>
+                        <span class="activity-time">Yesterday</span>
+                    </div>
+                    <div class="activity-item">
+                        <i class="fas fa-trophy text-warning"></i>
+                        <span>Achieved 3-day study streak</span>
+                        <span class="activity-time">2 days ago</span>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Add event listeners for navigation
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.preventDefault();
+                document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+                item.classList.add('active');
+                // Handle page navigation here
+            });
+        });
+        
     } else {
         // Show login-related elements
         loginElements.forEach(el => el.style.display = 'block');
@@ -907,9 +742,7 @@ function updateAuthUI() {
         }
         
         // Clear main content
-        if (mainContent) {
-            mainContent.innerHTML = '';
-        }
+        mainContent.innerHTML = '';
     }
 }
 
