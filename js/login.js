@@ -278,41 +278,218 @@
         const loginButtons = document.querySelectorAll('.login-button');
         const logoutButtons = document.querySelectorAll('.logout-button');
         const registerLinks = document.querySelectorAll('.register-link');
+        const navMenu = document.querySelector('.nav-menu');
         
         if (userState.isLoggedIn) {
-            // Show user info
-            userInfoElements.forEach(el => {
-                if (el.querySelector('.user-avatar')) {
-                    if (userState.profilePic.startsWith('data:image')) {
-                        el.querySelector('.user-avatar').innerHTML = `<img src="${userState.profilePic}" alt="${userState.username}">`;
-                    } else {
-                        el.querySelector('.user-avatar').innerHTML = userState.profilePic;
-                    }
+            // Create or update navigation menu
+            if (!navMenu) {
+                const nav = document.createElement('nav');
+                nav.className = 'nav-menu';
+                nav.innerHTML = `
+                    <div class="user-profile">
+                        <div class="user-avatar">${userState.profilePic}</div>
+                        <div class="user-details">
+                            <span class="user-name">${userState.username}</span>
+                            <span class="user-email">${userState.email}</span>
+                        </div>
+                    </div>
+                    <div class="nav-links">
+                        <a href="#" class="nav-link" id="viewProfileBtn">
+                            <i class="fas fa-user"></i> Profile
+                        </a>
+                        <a href="#" class="nav-link" id="viewDatabaseBtn">
+                            <i class="fas fa-database"></i> View Database
+                        </a>
+                        <a href="#" class="nav-link" id="resetDataBtn">
+                            <i class="fas fa-redo"></i> Reset Data
+                        </a>
+                        <a href="#" class="nav-link logout-button">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </a>
+                    </div>
+                `;
+                document.body.insertBefore(nav, document.body.firstChild);
+
+                // Add event listeners for new buttons
+                document.getElementById('viewProfileBtn').addEventListener('click', showProfileModal);
+                document.getElementById('viewDatabaseBtn').addEventListener('click', showDatabaseModal);
+                document.getElementById('resetDataBtn').addEventListener('click', showResetConfirmation);
+            } else {
+                // Update existing menu
+                const userAvatar = navMenu.querySelector('.user-avatar');
+                const userName = navMenu.querySelector('.user-name');
+                const userEmail = navMenu.querySelector('.user-email');
+                
+                if (userAvatar) {
+                    userAvatar.innerHTML = userState.profilePic;
                 }
-                if (el.querySelector('.user-name')) {
-                    el.querySelector('.user-name').textContent = userState.username;
+                if (userName) {
+                    userName.textContent = userState.username;
                 }
-                el.style.display = 'flex';
-            });
+                if (userEmail) {
+                    userEmail.textContent = userState.email;
+                }
+            }
             
-            // Update feed items attribution
-            document.querySelectorAll('.feed-name').forEach(el => {
-                el.textContent = userState.username;
-            });
-            
-            // Hide login buttons, show logout
+            // Hide login elements
             loginButtons.forEach(el => el.style.display = 'none');
-            logoutButtons.forEach(el => el.style.display = 'block');
             registerLinks.forEach(el => el.style.display = 'none');
             
         } else {
-            // Hide user info
-            userInfoElements.forEach(el => el.style.display = 'none');
+            // Remove navigation menu if exists
+            if (navMenu) {
+                navMenu.remove();
+            }
             
-            // Show login button, hide logout
+            // Show login elements
             loginButtons.forEach(el => el.style.display = 'block');
-            logoutButtons.forEach(el => el.style.display = 'none');
             registerLinks.forEach(el => el.style.display = 'block');
+        }
+    }
+
+    // Show user profile modal
+    function showProfileModal() {
+        let profileModal = document.getElementById('profile-modal');
+        if (!profileModal) {
+            profileModal = document.createElement('div');
+            profileModal.id = 'profile-modal';
+            profileModal.className = 'modal';
+            profileModal.innerHTML = `
+                <div class="modal-content">
+                    <span class="close-modal">&times;</span>
+                    <div class="profile-header">
+                        <div class="profile-avatar">${userState.profilePic}</div>
+                        <h2>${userState.username}'s Profile</h2>
+                    </div>
+                    <div class="profile-info">
+                        <p><strong>Email:</strong> ${userState.email}</p>
+                        <p><strong>Member Since:</strong> ${new Date(userState.dateRegistered).toLocaleDateString()}</p>
+                    </div>
+                    <div class="profile-actions">
+                        <button id="changePasswordBtn" class="secondary-btn">
+                            <i class="fas fa-key"></i> Change Password
+                        </button>
+                        <button id="exportDataBtn" class="secondary-btn">
+                            <i class="fas fa-download"></i> Export Data
+                        </button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(profileModal);
+
+            // Add event listeners
+            profileModal.querySelector('.close-modal').addEventListener('click', () => {
+                profileModal.style.display = 'none';
+            });
+            document.getElementById('changePasswordBtn').addEventListener('click', () => {
+                profileModal.style.display = 'none';
+                showChangePasswordModal();
+            });
+            document.getElementById('exportDataBtn').addEventListener('click', () => {
+                profileModal.style.display = 'none';
+                exportUserData();
+            });
+        }
+        profileModal.style.display = 'flex';
+    }
+
+    // Show database view modal
+    function showDatabaseModal() {
+        let dbModal = document.getElementById('database-modal');
+        if (!dbModal) {
+            dbModal = document.createElement('div');
+            dbModal.id = 'database-modal';
+            dbModal.className = 'modal';
+            dbModal.innerHTML = `
+                <div class="modal-content">
+                    <span class="close-modal">&times;</span>
+                    <h2>Your Study Data</h2>
+                    <div class="data-view">
+                        <div class="data-section">
+                            <h3>Study Streaks</h3>
+                            <pre id="streakData"></pre>
+                        </div>
+                        <div class="data-section">
+                            <h3>Tasks</h3>
+                            <pre id="taskData"></pre>
+                        </div>
+                        <div class="data-section">
+                            <h3>Study Logs</h3>
+                            <pre id="logData"></pre>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(dbModal);
+
+            // Add event listener for close button
+            dbModal.querySelector('.close-modal').addEventListener('click', () => {
+                dbModal.style.display = 'none';
+            });
+        }
+
+        // Update data display
+        const userData = JSON.parse(localStorage.getItem(`studyTracker_appData_${userState.userId}`) || '{}');
+        document.getElementById('streakData').textContent = JSON.stringify(userData.streak || 0, null, 2);
+        document.getElementById('taskData').textContent = JSON.stringify(userData.tasks || [], null, 2);
+        document.getElementById('logData').textContent = JSON.stringify(userData.logs || [], null, 2);
+
+        dbModal.style.display = 'flex';
+    }
+
+    // Show reset confirmation modal
+    function showResetConfirmation() {
+        let resetModal = document.getElementById('reset-modal');
+        if (!resetModal) {
+            resetModal = document.createElement('div');
+            resetModal.id = 'reset-modal';
+            resetModal.className = 'modal';
+            resetModal.innerHTML = `
+                <div class="modal-content">
+                    <span class="close-modal">&times;</span>
+                    <h2>Reset Data</h2>
+                    <p class="warning-text">Are you sure you want to reset your data? This action cannot be undone.</p>
+                    <div class="modal-actions">
+                        <button id="confirmResetBtn" class="danger-btn">Yes, Reset Data</button>
+                        <button id="cancelResetBtn" class="secondary-btn">Cancel</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(resetModal);
+
+            // Add event listeners
+            resetModal.querySelector('.close-modal').addEventListener('click', () => {
+                resetModal.style.display = 'none';
+            });
+            document.getElementById('cancelResetBtn').addEventListener('click', () => {
+                resetModal.style.display = 'none';
+            });
+            document.getElementById('confirmResetBtn').addEventListener('click', () => {
+                resetUserData();
+                resetModal.style.display = 'none';
+                showMessage('Your data has been reset successfully');
+            });
+        }
+        resetModal.style.display = 'flex';
+    }
+
+    // Reset user data
+    function resetUserData() {
+        const emptyData = {
+            streak: 0,
+            lastCompletedDate: null,
+            tasks: [],
+            logs: []
+        };
+        localStorage.setItem(`studyTracker_appData_${userState.userId}`, JSON.stringify(emptyData));
+        if (window.appState) {
+            window.appState.streak = 0;
+            window.appState.lastCompletedDate = null;
+            window.appState.tasks = [];
+            window.appState.logs = [];
+            if (typeof window.saveData === 'function') {
+                window.saveData();
+            }
         }
     }
 
