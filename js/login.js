@@ -14,34 +14,15 @@ function handleLogin(event) {
     const user = users.find(u => u.email === email && u.hashedPassword === hashedPassword);
     
     if (user) {
-        const userInfo = {
-            username: user.username,
-            email: user.email,
-            profilePic: user.profilePic || generateInitialsAvatar(user.username),
-            userId: user.userId
-        };
-        
-        sessionStorage.setItem('studyTrackerUser', JSON.stringify(userInfo));
-        userState.isLoggedIn = true;
-        userState.username = user.username;
-        userState.email = user.email;
-        userState.profilePic = user.profilePic || generateInitialsAvatar(user.username);
-        userState.userId = user.userId;
-        
-        updateAuthUI();
-        
-        // Redirect after a short delay to allow UI update
-        setTimeout(() => {
-            window.location.href = window.location.pathname.includes('github.io') 
-                ? '/study-tracker/index.html'
-                : '/index.html';
-        }, 500);
+        loginUser(user);
     } else {
         showError('Invalid email or password');
     }
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM Content Loaded');
+    
     // Simple SHA-256 hashing (simulated - in a real app, use a proper crypto library)
     function hashPassword(password) {
         let hash = 0;
@@ -53,7 +34,7 @@ document.addEventListener('DOMContentLoaded', function() {
         return Math.abs(hash).toString(16).padStart(8, '0');
     }
 
-    // User authentication state
+    // User authentication system
     const userState = {
         isLoggedIn: false,
         username: '',
@@ -64,7 +45,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initialize authentication
     function initAuth() {
-        const savedUser = sessionStorage.getItem('studyTrackerUser');
+        const savedUser = localStorage.getItem('currentUser');
         if (savedUser) {
             try {
                 const parsedUser = JSON.parse(savedUser);
@@ -76,75 +57,203 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 if (window.location.href.includes('login.html')) {
                     redirectToHome();
+                } else {
+                    updateAuthUI();
                 }
             } catch (error) {
                 console.error('Error parsing saved user data:', error);
-                sessionStorage.removeItem('studyTrackerUser');
+                localStorage.removeItem('currentUser');
             }
         } else if (!window.location.href.includes('login.html')) {
             redirectToLogin();
         }
     }
 
+    // Handle user registration
+    function handleRegister(event) {
+        event.preventDefault();
+        
+        const username = document.getElementById('register-username').value;
+        const email = document.getElementById('register-email').value;
+        const password = document.getElementById('register-password').value;
+        const confirmPassword = document.getElementById('register-confirm-password').value;
+        const phone = document.getElementById('register-phone').value;
+        const securityQuestion = document.getElementById('register-security-question').value;
+        const securityAnswer = document.getElementById('register-security-answer').value;
+        
+        if (!username || !email || !password || !confirmPassword || !phone || !securityQuestion || !securityAnswer) {
+            showError('Please fill in all fields', 'register-error');
+            return;
+        }
+        
+        if (password !== confirmPassword) {
+            showError('Passwords do not match', 'register-error');
+            return;
+        }
+        
+        const users = JSON.parse(localStorage.getItem('studyTrackerUsers') || '[]');
+        
+        if (users.some(u => u.email === email)) {
+            showError('Email already registered', 'register-error');
+            return;
+        }
+        
+        const hashedPassword = hashPassword(password);
+        const userId = generateUserId();
+        
+        const newUser = {
+            username,
+            email,
+            hashedPassword,
+            userId,
+            phone,
+            securityQuestion,
+            securityAnswer: hashPassword(securityAnswer.toLowerCase()),
+            profilePic: '',
+            createdAt: new Date().toISOString()
+        };
+        
+        users.push(newUser);
+        localStorage.setItem('studyTrackerUsers', JSON.stringify(users));
+        
+        // Auto login after registration
+        loginUser(newUser);
+        
+        // Close registration modal
+        const registerModal = document.getElementById('registerModal');
+        if (registerModal) {
+            registerModal.style.display = 'none';
+        }
+    }
+
     // Handle user login
-    function login(email, password) {
+    function handleLogin(event) {
+        event.preventDefault();
+        
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        
+        if (!email || !password) {
+            showError('Please fill in all fields');
+            return;
+        }
+        
         const users = JSON.parse(localStorage.getItem('studyTrackerUsers') || '[]');
         const hashedPassword = hashPassword(password);
         const user = users.find(u => u.email === email && u.hashedPassword === hashedPassword);
         
         if (user) {
-            const userInfo = {
-                username: user.username,
-                email: user.email,
-                profilePic: user.profilePic || generateInitialsAvatar(user.username),
-                userId: user.userId
-            };
-            
-            sessionStorage.setItem('studyTrackerUser', JSON.stringify(userInfo));
-            userState.isLoggedIn = true;
-            userState.username = user.username;
-            userState.email = user.email;
-            userState.profilePic = user.profilePic || generateInitialsAvatar(user.username);
-            userState.userId = user.userId;
-            
+            loginUser(user);
+        } else {
+            showError('Invalid email or password');
+        }
+    }
+
+    // Login user and set session
+    function loginUser(user) {
+        const userInfo = {
+            username: user.username,
+            email: user.email,
+            profilePic: user.profilePic || generateInitialsAvatar(user.username),
+            userId: user.userId
+        };
+        
+        localStorage.setItem('currentUser', JSON.stringify(userInfo));
+        userState.isLoggedIn = true;
+        userState.username = user.username;
+        userState.email = user.email;
+        userState.profilePic = user.profilePic || generateInitialsAvatar(user.username);
+        userState.userId = user.userId;
+        
+        updateAuthUI();
+        
+        // Redirect after a short delay
+        setTimeout(() => {
             redirectToHome();
-            return true;
+        }, 500);
+    }
+
+    // Handle logout
+    function handleLogout() {
+        localStorage.removeItem('currentUser');
+        userState.isLoggedIn = false;
+        userState.username = '';
+        userState.email = '';
+        userState.profilePic = '';
+        userState.userId = '';
+        
+        redirectToLogin();
+    }
+
+    // Password recovery
+    function handlePasswordRecovery(event) {
+        event.preventDefault();
+        
+        const email = document.getElementById('recovery-email').value;
+        const users = JSON.parse(localStorage.getItem('studyTrackerUsers') || '[]');
+        const user = users.find(u => u.email === email);
+        
+        if (!user) {
+            showError('Email not found', 'recovery-error');
+            return;
         }
         
-        return false;
+        const securityQuestionContainer = document.getElementById('security-question-container');
+        const securityQuestionText = document.getElementById('security-question-text');
+        
+        securityQuestionText.textContent = user.securityQuestion;
+        securityQuestionContainer.style.display = 'block';
+        
+        const recoveryForm = document.getElementById('recoveryForm');
+        recoveryForm.onsubmit = (e) => {
+            e.preventDefault();
+            
+            const answer = document.getElementById('security-answer').value;
+            const newPassword = document.getElementById('new-password').value;
+            const confirmNewPassword = document.getElementById('confirm-new-password').value;
+            
+            if (hashPassword(answer.toLowerCase()) !== user.securityAnswer) {
+                showError('Incorrect security answer', 'recovery-error');
+                return;
+            }
+            
+            if (newPassword !== confirmNewPassword) {
+                showError('Passwords do not match', 'recovery-error');
+                return;
+            }
+            
+            // Update password
+            const updatedUsers = users.map(u => {
+                if (u.email === email) {
+                    return { ...u, hashedPassword: hashPassword(newPassword) };
+                }
+                return u;
+            });
+            
+            localStorage.setItem('studyTrackerUsers', JSON.stringify(updatedUsers));
+            
+            // Close modal and show success message
+            const recoveryModal = document.getElementById('recoveryModal');
+            recoveryModal.style.display = 'none';
+            alert('Password updated successfully. Please log in with your new password.');
+        };
     }
 
-    // Handle form submission
-    const loginForm = document.getElementById('loginForm');
-    if (loginForm) {
-        loginForm.addEventListener('submit', handleLogin);
-    }
-
-    // Show error message
-    function showError(message, elementId = 'login-error') {
-        const errorElement = document.getElementById(elementId);
-        if (errorElement) {
-            errorElement.textContent = message;
-            errorElement.style.display = 'block';
+    // Utility functions
+    function hashPassword(password) {
+        let hash = 0;
+        for (let i = 0; i < password.length; i++) {
+            const char = password.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash = hash & hash;
         }
+        return Math.abs(hash).toString(16).padStart(8, '0');
     }
 
-    // Redirect functions
-    function redirectToHome() {
-        const basePath = window.location.pathname.includes('github.io') 
-            ? '/study-tracker/'
-            : '/';
-        window.location.href = basePath + 'index.html';
+    function generateUserId() {
+        return 'user_' + Math.random().toString(36).substr(2, 9);
     }
 
-    function redirectToLogin() {
-        const basePath = window.location.pathname.includes('github.io')
-            ? '/study-tracker/'
-            : '/';
-        window.location.href = basePath + 'login.html';
-    }
-
-    // Generate initials avatar
     function generateInitialsAvatar(username) {
         if (!username) return 'U';
         const nameParts = username.trim().split(' ');
@@ -155,44 +264,42 @@ document.addEventListener('DOMContentLoaded', function() {
         return initials;
     }
 
-    // Setup other event listeners
-    const forgotPasswordLink = document.getElementById('forgotPasswordLink');
-    if (forgotPasswordLink) {
-        forgotPasswordLink.addEventListener('click', function(e) {
-            e.preventDefault();
-            const recoveryModal = document.getElementById('recoveryModal');
-            if (recoveryModal) {
-                recoveryModal.style.display = 'flex';
-            }
-        });
+    function showError(message, elementId = 'login-error') {
+        const errorElement = document.getElementById(elementId);
+        if (errorElement) {
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
+        }
     }
 
-    const showRegisterBtn = document.getElementById('showRegisterForm');
-    if (showRegisterBtn) {
-        showRegisterBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            const registerModal = document.getElementById('registerModal');
-            if (registerModal) {
-                registerModal.style.display = 'flex';
-            }
-        });
+    // Navigation functions
+    function getBasePath() {
+        // Check if we're on GitHub Pages
+        if (window.location.hostname.includes('github.io')) {
+            return '/study-tracker/';
+        }
+        // Local development
+        return '/';
     }
 
-    // Close modal functionality
-    document.querySelectorAll('.close-modal').forEach(button => {
-        button.addEventListener('click', function() {
-            this.closest('.modal').style.display = 'none';
-        });
-    });
+    function redirectToHome() {
+        window.location.href = window.location.protocol + '//' + window.location.host + getBasePath();
+    }
+
+    function redirectToLogin() {
+        window.location.href = window.location.protocol + '//' + window.location.host + getBasePath() + 'login.html';
+    }
 
     // Update UI based on authentication state
     function updateAuthUI() {
         const loginElements = document.querySelectorAll('.login-box, .signup-box, .app-download');
-        const userProfileContainer = document.querySelector('.user-profile-container') || createUserProfileContainer(userState);
-
+        const userProfileContainer = document.querySelector('.user-profile-container') || createUserProfileContainer();
+        const authButtons = document.querySelector('.auth-buttons');
+        
         if (userState.isLoggedIn) {
             // Hide login-related elements
             loginElements.forEach(el => el.style.display = 'none');
+            if (authButtons) authButtons.style.display = 'none';
             
             // Show user profile
             userProfileContainer.style.display = 'flex';
@@ -203,6 +310,7 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
             // Show login-related elements
             loginElements.forEach(el => el.style.display = 'block');
+            if (authButtons) authButtons.style.display = 'flex';
             
             // Hide user profile
             userProfileContainer.style.display = 'none';
@@ -210,61 +318,160 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Create user profile container
-    function createUserProfileContainer(user) {
+    function createUserProfileContainer() {
         const container = document.createElement('div');
         container.className = 'user-profile-container';
-
+        
         const profile = document.createElement('div');
         profile.className = 'user-profile';
-
+        
         const avatar = document.createElement('div');
         avatar.className = 'user-avatar';
-        avatar.textContent = user.username.charAt(0).toUpperCase();
-
+        avatar.textContent = userState.profilePic;
+        
         const info = document.createElement('div');
         info.className = 'user-info';
-
+        
         const name = document.createElement('div');
         name.className = 'user-name';
-        name.textContent = user.username;
-
+        name.textContent = userState.username;
+        
         const actions = document.createElement('div');
         actions.className = 'user-actions';
-
+        
         const profileBtn = document.createElement('button');
         profileBtn.className = 'nav-btn profile-btn';
         profileBtn.innerHTML = '<i class="fas fa-user"></i> Profile';
         profileBtn.onclick = () => showProfile();
-
+        
         const databaseBtn = document.createElement('button');
         databaseBtn.className = 'nav-btn database-btn';
         databaseBtn.innerHTML = '<i class="fas fa-database"></i> Database';
         databaseBtn.onclick = () => showDatabaseView();
-
+        
         const settingsBtn = document.createElement('button');
         settingsBtn.className = 'nav-btn settings-btn';
         settingsBtn.innerHTML = '<i class="fas fa-cog"></i> Settings';
         settingsBtn.onclick = () => showSettings();
-
+        
         const logoutBtn = document.createElement('button');
         logoutBtn.className = 'nav-btn logout-btn';
         logoutBtn.innerHTML = '<i class="fas fa-sign-out-alt"></i> Logout';
         logoutBtn.onclick = () => handleLogout();
-
+        
         actions.appendChild(profileBtn);
         actions.appendChild(databaseBtn);
         actions.appendChild(settingsBtn);
         actions.appendChild(logoutBtn);
-
+        
         info.appendChild(name);
         info.appendChild(actions);
-
+        
         profile.appendChild(avatar);
         profile.appendChild(info);
-
+        
         container.appendChild(profile);
+        
+        // Add container to header if it doesn't exist
+        const headerRight = document.querySelector('.header-right');
+        if (headerRight && !headerRight.querySelector('.user-profile-container')) {
+            headerRight.insertBefore(container, headerRight.firstChild);
+        }
+        
         return container;
     }
+
+    // Event listeners
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize authentication
+        initAuth();
+        
+        // Set up form event listeners
+        const loginForm = document.getElementById('loginForm');
+        console.log('Login form found:', !!loginForm);
+        
+        if (loginForm) {
+            loginForm.addEventListener('submit', function(event) {
+                console.log('Login form submitted');
+                event.preventDefault();
+                
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                console.log('Email entered:', !!email, 'Password entered:', !!password);
+                
+                if (!email || !password) {
+                    showError('Please fill in all fields');
+                    return;
+                }
+                
+                const users = JSON.parse(localStorage.getItem('studyTrackerUsers') || '[]');
+                console.log('Found users:', users.length);
+                
+                const hashedPassword = hashPassword(password);
+                const user = users.find(u => u.email === email && u.hashedPassword === hashedPassword);
+                console.log('User found:', !!user);
+                
+                if (user) {
+                    console.log('Logging in user:', user.email);
+                    loginUser(user);
+                } else {
+                    showError('Invalid email or password');
+                }
+            });
+        }
+        
+        if (registerForm) {
+            registerForm.addEventListener('submit', handleRegister);
+        }
+        
+        if (recoveryForm) {
+            recoveryForm.addEventListener('submit', handlePasswordRecovery);
+        }
+        
+        // Modal triggers
+        const showRegisterBtn = document.getElementById('showRegisterForm');
+        const forgotPasswordLink = document.getElementById('forgotPasswordLink');
+        
+        if (showRegisterBtn) {
+            showRegisterBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const registerModal = document.getElementById('registerModal');
+                if (registerModal) {
+                    registerModal.style.display = 'flex';
+                }
+            });
+        }
+        
+        if (forgotPasswordLink) {
+            forgotPasswordLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                const recoveryModal = document.getElementById('recoveryModal');
+                if (recoveryModal) {
+                    recoveryModal.style.display = 'flex';
+                }
+            });
+        }
+        
+        // Close modal functionality
+        document.querySelectorAll('.close-modal').forEach(button => {
+            button.addEventListener('click', function() {
+                this.closest('.modal').style.display = 'none';
+            });
+        });
+        
+        // Close modals when clicking outside
+        window.addEventListener('click', function(e) {
+            if (e.target.classList.contains('modal')) {
+                e.target.style.display = 'none';
+            }
+        });
+
+        // Update login link href when document loads
+        const loginLink = document.getElementById('login-link');
+        if (loginLink) {
+            loginLink.href = getBasePath() + 'login.html';
+        }
+    });
 
     // Show database view
     function showDatabaseView() {
