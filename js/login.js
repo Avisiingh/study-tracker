@@ -1,19 +1,61 @@
 // Login system for Study Tracker
+
+// Utility functions
+function hashPassword(password) {
+    let hash = 0;
+    for (let i = 0; i < password.length; i++) {
+        const char = password.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash;
+    }
+    return Math.abs(hash).toString(16).padStart(8, '0');
+}
+
+function generateUserId() {
+    return 'user_' + Math.random().toString(36).substr(2, 9);
+}
+
+function generateInitialsAvatar(username) {
+    if (!username) return 'U';
+    const nameParts = username.trim().split(' ');
+    let initials = nameParts[0][0].toUpperCase();
+    if (nameParts.length > 1) {
+        initials += nameParts[nameParts.length - 1][0].toUpperCase();
+    }
+    return initials;
+}
+
+function showError(message, elementId = 'login-error') {
+    const errorElement = document.getElementById(elementId);
+    if (errorElement) {
+        errorElement.textContent = message;
+        errorElement.style.display = 'block';
+    }
+}
+
+// Handle user login
 function handleLogin(event) {
     event.preventDefault();
+    console.log('Login form submitted');
+    
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
+    console.log('Email entered:', !!email, 'Password entered:', !!password);
     
     if (!email || !password) {
         showError('Please fill in all fields');
         return;
     }
-
+    
     const users = JSON.parse(localStorage.getItem('studyTrackerUsers') || '[]');
+    console.log('Found users:', users.length);
+    
     const hashedPassword = hashPassword(password);
     const user = users.find(u => u.email === email && u.hashedPassword === hashedPassword);
+    console.log('User found:', !!user);
     
     if (user) {
+        console.log('Logging in user:', user.email);
         loginUser(user);
     } else {
         showError('Invalid email or password');
@@ -23,17 +65,6 @@ function handleLogin(event) {
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM Content Loaded');
     
-    // Simple SHA-256 hashing (simulated - in a real app, use a proper crypto library)
-    function hashPassword(password) {
-        let hash = 0;
-        for (let i = 0; i < password.length; i++) {
-            const char = password.charCodeAt(i);
-            hash = ((hash << 5) - hash) + char;
-            hash = hash & hash;
-        }
-        return Math.abs(hash).toString(16).padStart(8, '0');
-    }
-
     // User authentication system
     const userState = {
         isLoggedIn: false,
@@ -126,29 +157,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Handle user login
-    function handleLogin(event) {
-        event.preventDefault();
-        
-        const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
-        
-        if (!email || !password) {
-            showError('Please fill in all fields');
-            return;
-        }
-        
-        const users = JSON.parse(localStorage.getItem('studyTrackerUsers') || '[]');
-        const hashedPassword = hashPassword(password);
-        const user = users.find(u => u.email === email && u.hashedPassword === hashedPassword);
-        
-        if (user) {
-            loginUser(user);
-        } else {
-            showError('Invalid email or password');
-        }
-    }
-
     // Login user and set session
     function loginUser(user) {
         const userInfo = {
@@ -237,39 +245,6 @@ document.addEventListener('DOMContentLoaded', function() {
             recoveryModal.style.display = 'none';
             alert('Password updated successfully. Please log in with your new password.');
         };
-    }
-
-    // Utility functions
-    function hashPassword(password) {
-        let hash = 0;
-        for (let i = 0; i < password.length; i++) {
-            const char = password.charCodeAt(i);
-            hash = ((hash << 5) - hash) + char;
-            hash = hash & hash;
-        }
-        return Math.abs(hash).toString(16).padStart(8, '0');
-    }
-
-    function generateUserId() {
-        return 'user_' + Math.random().toString(36).substr(2, 9);
-    }
-
-    function generateInitialsAvatar(username) {
-        if (!username) return 'U';
-        const nameParts = username.trim().split(' ');
-        let initials = nameParts[0][0].toUpperCase();
-        if (nameParts.length > 1) {
-            initials += nameParts[nameParts.length - 1][0].toUpperCase();
-        }
-        return initials;
-    }
-
-    function showError(message, elementId = 'login-error') {
-        const errorElement = document.getElementById(elementId);
-        if (errorElement) {
-            errorElement.textContent = message;
-            errorElement.style.display = 'block';
-        }
     }
 
     // Navigation functions
@@ -391,33 +366,7 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('Login form found:', !!loginForm);
         
         if (loginForm) {
-            loginForm.addEventListener('submit', function(event) {
-                console.log('Login form submitted');
-                event.preventDefault();
-                
-                const email = document.getElementById('email').value;
-                const password = document.getElementById('password').value;
-                console.log('Email entered:', !!email, 'Password entered:', !!password);
-                
-                if (!email || !password) {
-                    showError('Please fill in all fields');
-                    return;
-                }
-                
-                const users = JSON.parse(localStorage.getItem('studyTrackerUsers') || '[]');
-                console.log('Found users:', users.length);
-                
-                const hashedPassword = hashPassword(password);
-                const user = users.find(u => u.email === email && u.hashedPassword === hashedPassword);
-                console.log('User found:', !!user);
-                
-                if (user) {
-                    console.log('Logging in user:', user.email);
-                    loginUser(user);
-                } else {
-                    showError('Invalid email or password');
-                }
-            });
+            loginForm.addEventListener('submit', handleLogin);
         }
         
         if (registerForm) {
