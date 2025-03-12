@@ -321,78 +321,137 @@
     // Setup event listeners for authentication
     function setupAuthEvents() {
         // Login form
-        const loginForm = document.getElementById('login-form');
+        const loginForm = document.getElementById('loginForm');
         if (loginForm) {
             loginForm.addEventListener('submit', function(e) {
                 e.preventDefault();
-                
-                const email = document.getElementById('login-email').value;
-                const password = document.getElementById('login-password').value;
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
                 
                 const loginResult = login(email, password);
                 if (!loginResult) {
-                    const errorMsg = document.getElementById('login-error');
-                    errorMsg.textContent = 'Invalid email or password';
-                    errorMsg.style.display = 'block';
+                    showError('Invalid email or password');
                 }
             });
         }
         
         // Forgot password link
-        const forgotPasswordLink = document.getElementById('forgot-password-link');
+        const forgotPasswordLink = document.getElementById('forgotPasswordLink');
         if (forgotPasswordLink) {
             forgotPasswordLink.addEventListener('click', function(e) {
                 e.preventDefault();
-                showPasswordRecoveryModal();
+                const recoveryModal = document.getElementById('recoveryModal');
+                recoveryModal.style.display = 'flex';
             });
         }
         
+        // Show register form
+        const showRegisterBtn = document.getElementById('showRegisterForm');
+        if (showRegisterBtn) {
+            showRegisterBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const registerModal = document.getElementById('registerModal');
+                registerModal.style.display = 'flex';
+            });
+        }
+        
+        // Google login
+        const googleLoginBtn = document.querySelector('.google-login');
+        if (googleLoginBtn) {
+            googleLoginBtn.addEventListener('click', function() {
+                // Simulate Google OAuth flow
+                showMessage('Google login is currently under development. Please use email login.');
+            });
+        }
+        
+        // Close modal buttons
+        document.querySelectorAll('.close-modal').forEach(button => {
+            button.addEventListener('click', function() {
+                this.closest('.modal').style.display = 'none';
+            });
+        });
+        
         // Register form
-        const registerForm = document.getElementById('register-form');
+        const registerForm = document.getElementById('registerForm');
         if (registerForm) {
             registerForm.addEventListener('submit', function(e) {
                 e.preventDefault();
                 
                 const username = document.getElementById('register-username').value;
                 const email = document.getElementById('register-email').value;
+                const phone = document.getElementById('register-phone').value;
                 const password = document.getElementById('register-password').value;
                 const confirmPassword = document.getElementById('register-confirm-password').value;
-                const phone = document.getElementById('register-phone').value;
                 const securityQuestion = document.getElementById('register-security-question').value;
                 const securityAnswer = document.getElementById('register-security-answer').value;
-                
-                const errorMsg = document.getElementById('register-error');
-                
-                // Validate input
+                const enableReminders = document.getElementById('register-reminders').checked;
+
                 if (password !== confirmPassword) {
-                    errorMsg.textContent = 'Passwords do not match';
-                    errorMsg.style.display = 'block';
+                    showError('Passwords do not match', 'register-error');
                     return;
                 }
-                
+
                 if (password.length < 6) {
-                    errorMsg.textContent = 'Password must be at least 6 characters';
-                    errorMsg.style.display = 'block';
+                    showError('Password must be at least 6 characters', 'register-error');
                     return;
                 }
-                
-                // Additional password strength validation
-                if (!/[A-Z]/.test(password)) {
-                    errorMsg.textContent = 'Password must contain at least one uppercase letter';
-                    errorMsg.style.display = 'block';
-                    return;
-                }
-                
-                if (!/[0-9]/.test(password)) {
-                    errorMsg.textContent = 'Password must contain at least one number';
-                    errorMsg.style.display = 'block';
-                    return;
-                }
-                
+
                 const registerResult = register(username, email, password, phone, securityQuestion, securityAnswer);
-                if (!registerResult.success) {
-                    errorMsg.textContent = registerResult.message;
-                    errorMsg.style.display = 'block';
+                if (registerResult.success) {
+                    if (enableReminders) {
+                        toggleReminders(true);
+                    }
+                    document.getElementById('registerModal').style.display = 'none';
+                    showMessage('Registration successful! You can now log in.');
+                } else {
+                    showError(registerResult.message, 'register-error');
+                }
+            });
+        }
+        
+        // Password recovery form
+        const recoveryForm = document.getElementById('recoveryForm');
+        if (recoveryForm) {
+            recoveryForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const email = document.getElementById('recovery-email').value;
+                const securityContainer = document.getElementById('security-question-container');
+                const securityAnswer = document.getElementById('security-answer');
+                const newPassword = document.getElementById('new-password');
+                
+                if (!securityContainer.style.display || securityContainer.style.display === 'none') {
+                    // First step: Find account
+                    const users = JSON.parse(localStorage.getItem('studyTrackerUsers') || '[]');
+                    const user = users.find(u => u.email === email);
+                    
+                    if (!user) {
+                        showError('No account found with this email', 'recovery-error');
+                        return;
+                    }
+
+                    // Show security question
+                    securityContainer.style.display = 'block';
+                    document.getElementById('security-question-text').textContent = getSecurityQuestion(user.securityQuestion);
+                    document.getElementById('recovery-submit').textContent = 'Reset Password';
+                } else {
+                    // Second step: Reset password
+                    const answer = securityAnswer.value;
+                    const password = newPassword.value;
+                    const confirmPassword = document.getElementById('confirm-new-password').value;
+
+                    if (password !== confirmPassword) {
+                        showError('Passwords do not match', 'recovery-error');
+                        return;
+                    }
+
+                    const resetResult = recoverPassword(email, answer, password);
+                    if (resetResult.success) {
+                        document.getElementById('recoveryModal').style.display = 'none';
+                        showMessage('Password reset successful! You can now log in with your new password.');
+                    } else {
+                        showError(resetResult.message, 'recovery-error');
+                    }
                 }
             });
         }
@@ -838,17 +897,210 @@
 
     // Initialize when the DOM is ready
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function() {
-            initAuth();
-            setupAuthEvents();
-            setTimeout(setupUserSettings, 1000); // Delay to ensure settings modal is loaded
-        });
+        document.addEventListener('DOMContentLoaded', initializeLoginPage);
     } else {
-        initAuth();
-        setupAuthEvents();
-        setTimeout(setupUserSettings, 1000); // Delay to ensure settings modal is loaded
+        initializeLoginPage();
     }
-    
+
+    function initializeLoginPage() {
+        // Login form
+        const loginForm = document.getElementById('loginForm');
+        if (loginForm) {
+            loginForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                
+                const loginResult = login(email, password);
+                if (!loginResult) {
+                    showError('Invalid email or password');
+                }
+            });
+        }
+
+        // Forgot password link
+        const forgotPasswordLink = document.getElementById('forgotPasswordLink');
+        if (forgotPasswordLink) {
+            forgotPasswordLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                const recoveryModal = document.getElementById('recoveryModal');
+                recoveryModal.style.display = 'flex';
+            });
+        }
+
+        // Show register form
+        const showRegisterBtn = document.getElementById('showRegisterForm');
+        if (showRegisterBtn) {
+            showRegisterBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const registerModal = document.getElementById('registerModal');
+                registerModal.style.display = 'flex';
+            });
+        }
+
+        // Google login
+        const googleLoginBtn = document.querySelector('.google-login');
+        if (googleLoginBtn) {
+            googleLoginBtn.addEventListener('click', function() {
+                // Simulate Google OAuth flow
+                showMessage('Google login is currently under development. Please use email login.');
+            });
+        }
+
+        // Close modal buttons
+        document.querySelectorAll('.close-modal').forEach(button => {
+            button.addEventListener('click', function() {
+                this.closest('.modal').style.display = 'none';
+            });
+        });
+
+        // Register form
+        const registerForm = document.getElementById('registerForm');
+        if (registerForm) {
+            registerForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const username = document.getElementById('register-username').value;
+                const email = document.getElementById('register-email').value;
+                const phone = document.getElementById('register-phone').value;
+                const password = document.getElementById('register-password').value;
+                const confirmPassword = document.getElementById('register-confirm-password').value;
+                const securityQuestion = document.getElementById('register-security-question').value;
+                const securityAnswer = document.getElementById('register-security-answer').value;
+                const enableReminders = document.getElementById('register-reminders').checked;
+
+                if (password !== confirmPassword) {
+                    showError('Passwords do not match', 'register-error');
+                    return;
+                }
+
+                if (password.length < 6) {
+                    showError('Password must be at least 6 characters', 'register-error');
+                    return;
+                }
+
+                const registerResult = register(username, email, password, phone, securityQuestion, securityAnswer);
+                if (registerResult.success) {
+                    if (enableReminders) {
+                        toggleReminders(true);
+                    }
+                    document.getElementById('registerModal').style.display = 'none';
+                    showMessage('Registration successful! You can now log in.');
+                } else {
+                    showError(registerResult.message, 'register-error');
+                }
+            });
+        }
+
+        // Password recovery form
+        const recoveryForm = document.getElementById('recoveryForm');
+        if (recoveryForm) {
+            recoveryForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const email = document.getElementById('recovery-email').value;
+                const securityContainer = document.getElementById('security-question-container');
+                const securityAnswer = document.getElementById('security-answer');
+                const newPassword = document.getElementById('new-password');
+                
+                if (!securityContainer.style.display || securityContainer.style.display === 'none') {
+                    // First step: Find account
+                    const users = JSON.parse(localStorage.getItem('studyTrackerUsers') || '[]');
+                    const user = users.find(u => u.email === email);
+                    
+                    if (!user) {
+                        showError('No account found with this email', 'recovery-error');
+                        return;
+                    }
+
+                    // Show security question
+                    securityContainer.style.display = 'block';
+                    document.getElementById('security-question-text').textContent = getSecurityQuestion(user.securityQuestion);
+                    document.getElementById('recovery-submit').textContent = 'Reset Password';
+                } else {
+                    // Second step: Reset password
+                    const answer = securityAnswer.value;
+                    const password = newPassword.value;
+                    const confirmPassword = document.getElementById('confirm-new-password').value;
+
+                    if (password !== confirmPassword) {
+                        showError('Passwords do not match', 'recovery-error');
+                        return;
+                    }
+
+                    const resetResult = recoverPassword(email, answer, password);
+                    if (resetResult.success) {
+                        document.getElementById('recoveryModal').style.display = 'none';
+                        showMessage('Password reset successful! You can now log in with your new password.');
+                    } else {
+                        showError(resetResult.message, 'recovery-error');
+                    }
+                }
+            });
+        }
+    }
+
+    // Helper function to show error messages
+    function showError(message, elementId = 'login-error') {
+        const errorElement = document.getElementById(elementId);
+        if (errorElement) {
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
+        }
+    }
+
+    // Helper function to show success messages
+    function showMessage(message) {
+        // Create a toast notification
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.innerHTML = `
+            <i class="fas fa-check-circle"></i>
+            <span class="toast-message">${message}</span>
+        `;
+        document.body.appendChild(toast);
+
+        // Show the toast
+        setTimeout(() => toast.classList.add('show'), 100);
+
+        // Remove the toast after 3 seconds
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+
+    // Helper function to get security question text
+    function getSecurityQuestion(questionKey) {
+        const questions = {
+            'pet': 'What was your first pet\'s name?',
+            'school': 'What was the name of your first school?',
+            'city': 'In which city were you born?',
+            'mother': 'What is your mother\'s maiden name?'
+        };
+        return questions[questionKey] || questionKey;
+    }
+
+    // Setup reminder system
+    function setupReminderSystem() {
+        const users = JSON.parse(localStorage.getItem('studyTrackerUsers') || '[]');
+        
+        users.forEach(async user => {
+            if (user.reminderEnabled) {
+                const lastActivity = new Date(user.lastActivityDate || 0);
+                const now = new Date();
+                const hoursSinceActivity = (now - lastActivity) / (1000 * 60 * 60);
+                
+                if (hoursSinceActivity >= 24) {
+                    await sendSMSReminder(
+                        user.phone,
+                        "Don't forget to maintain your study streak! Log in now to continue your progress."
+                    );
+                }
+            }
+        });
+    }
+
     // Export authentication functions to global scope
     window.studyTrackerAuth = {
         login,
