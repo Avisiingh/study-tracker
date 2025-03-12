@@ -349,8 +349,11 @@ function handleLogout() {
 // Password recovery
 function handlePasswordRecovery(event) {
     event.preventDefault();
+    console.log('Starting password recovery process');
     
     const email = document.getElementById('recovery-email').value;
+    console.log('Recovery email:', email);
+    
     const users = JSON.parse(localStorage.getItem('studyTrackerUsers') || '[]');
     const user = users.find(u => u.email === email);
     
@@ -361,17 +364,36 @@ function handlePasswordRecovery(event) {
     
     const securityQuestionContainer = document.getElementById('security-question-container');
     const securityQuestionText = document.getElementById('security-question-text');
+    const recoveryForm = document.getElementById('recoveryForm');
+    const recoverySubmitBtn = document.getElementById('recovery-submit');
     
+    if (!securityQuestionContainer || !securityQuestionText || !recoveryForm) {
+        console.error('Required recovery elements not found');
+        return;
+    }
+    
+    // Show security question
     securityQuestionText.textContent = user.securityQuestion;
     securityQuestionContainer.style.display = 'block';
     
-    const recoveryForm = document.getElementById('recoveryForm');
-    recoveryForm.onsubmit = (e) => {
+    // Update submit button text
+    if (recoverySubmitBtn) {
+        recoverySubmitBtn.textContent = 'Reset Password';
+    }
+    
+    // Handle the actual password reset
+    recoveryForm.onsubmit = function(e) {
         e.preventDefault();
+        console.log('Processing password reset submission');
         
         const answer = document.getElementById('security-answer').value;
         const newPassword = document.getElementById('new-password').value;
         const confirmNewPassword = document.getElementById('confirm-new-password').value;
+        
+        if (!answer || !newPassword || !confirmNewPassword) {
+            showError('Please fill in all fields', 'recovery-error');
+            return;
+        }
         
         if (hashPassword(answer.toLowerCase()) !== user.securityAnswer) {
             showError('Incorrect security answer', 'recovery-error');
@@ -383,6 +405,11 @@ function handlePasswordRecovery(event) {
             return;
         }
         
+        if (newPassword.length < 6) {
+            showError('Password must be at least 6 characters long', 'recovery-error');
+            return;
+        }
+        
         // Update password
         const updatedUsers = users.map(u => {
             if (u.email === email) {
@@ -391,12 +418,38 @@ function handlePasswordRecovery(event) {
             return u;
         });
         
-        localStorage.setItem('studyTrackerUsers', JSON.stringify(updatedUsers));
-        
-        // Close modal and show success message
-        const recoveryModal = document.getElementById('recoveryModal');
-        recoveryModal.style.display = 'none';
-        alert('Password updated successfully. Please log in with your new password.');
+        try {
+            localStorage.setItem('studyTrackerUsers', JSON.stringify(updatedUsers));
+            console.log('Password updated successfully');
+            
+            // Close recovery modal
+            const recoveryModal = document.getElementById('recoveryModal');
+            if (recoveryModal) {
+                recoveryModal.style.display = 'none';
+            }
+            
+            // Reset form
+            recoveryForm.reset();
+            securityQuestionContainer.style.display = 'none';
+            
+            // Show success message and auto-login
+            alert('Password updated successfully! Please log in with your new password.');
+            
+            // Clear any existing error messages
+            const errorElement = document.getElementById('recovery-error');
+            if (errorElement) {
+                errorElement.style.display = 'none';
+            }
+            
+            // Redirect to login page
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+            
+        } catch (error) {
+            console.error('Error updating password:', error);
+            showError('An error occurred while updating your password', 'recovery-error');
+        }
     };
 }
 
