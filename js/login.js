@@ -33,6 +33,44 @@ function showError(message, elementId = 'login-error') {
     }
 }
 
+// Navigation functions
+function getBasePath() {
+    // Check if we're on GitHub Pages
+    if (window.location.hostname.includes('github.io')) {
+        return '/study-tracker/';
+    }
+    // Local development
+    return '/';
+}
+
+function redirectToHome() {
+    window.location.href = window.location.protocol + '//' + window.location.host + getBasePath();
+}
+
+function redirectToLogin() {
+    window.location.href = window.location.protocol + '//' + window.location.host + getBasePath() + 'login.html';
+}
+
+// Login user and set session
+function loginUser(user) {
+    console.log('Attempting to log in user:', user.email);
+    const userInfo = {
+        username: user.username,
+        email: user.email,
+        profilePic: user.profilePic || generateInitialsAvatar(user.username),
+        userId: user.userId
+    };
+    
+    localStorage.setItem('currentUser', JSON.stringify(userInfo));
+    console.log('User info saved to localStorage');
+    
+    // Redirect after a short delay
+    setTimeout(() => {
+        console.log('Redirecting to home page');
+        redirectToHome();
+    }, 500);
+}
+
 // Handle user login
 function handleLogin(event) {
     event.preventDefault();
@@ -157,30 +195,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Login user and set session
-    function loginUser(user) {
-        const userInfo = {
-            username: user.username,
-            email: user.email,
-            profilePic: user.profilePic || generateInitialsAvatar(user.username),
-            userId: user.userId
-        };
-        
-        localStorage.setItem('currentUser', JSON.stringify(userInfo));
-        userState.isLoggedIn = true;
-        userState.username = user.username;
-        userState.email = user.email;
-        userState.profilePic = user.profilePic || generateInitialsAvatar(user.username);
-        userState.userId = user.userId;
-        
-        updateAuthUI();
-        
-        // Redirect after a short delay
-        setTimeout(() => {
-            redirectToHome();
-        }, 500);
-    }
-
     // Handle logout
     function handleLogout() {
         localStorage.removeItem('currentUser');
@@ -245,24 +259,6 @@ document.addEventListener('DOMContentLoaded', function() {
             recoveryModal.style.display = 'none';
             alert('Password updated successfully. Please log in with your new password.');
         };
-    }
-
-    // Navigation functions
-    function getBasePath() {
-        // Check if we're on GitHub Pages
-        if (window.location.hostname.includes('github.io')) {
-            return '/study-tracker/';
-        }
-        // Local development
-        return '/';
-    }
-
-    function redirectToHome() {
-        window.location.href = window.location.protocol + '//' + window.location.host + getBasePath();
-    }
-
-    function redirectToLogin() {
-        window.location.href = window.location.protocol + '//' + window.location.host + getBasePath() + 'login.html';
     }
 
     // Update UI based on authentication state
