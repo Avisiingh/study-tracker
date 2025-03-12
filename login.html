@@ -159,7 +159,7 @@
             </div>
 
             <div class="signup-box">
-                <p>Don't have an account? <a href="register.html">Sign up</a></p>
+                <p>Don't have an account? <a href="#" id="showRegisterForm">Sign up</a></p>
             </div>
 
             <div class="app-download">
@@ -178,6 +178,70 @@
         </div>
     </div>
 
+    <!-- Registration Modal -->
+    <div class="modal" id="registerModal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2>Create Account</h2>
+            <form id="registerForm">
+                <div class="form-group">
+                    <div class="input-with-icon">
+                        <input type="text" id="register-username" required placeholder="Username">
+                        <i class="fas fa-user"></i>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="input-with-icon">
+                        <input type="email" id="register-email" required placeholder="Email">
+                        <i class="fas fa-envelope"></i>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="input-with-icon">
+                        <input type="tel" id="register-phone" required placeholder="Phone Number">
+                        <i class="fas fa-phone"></i>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="input-with-icon">
+                        <input type="password" id="register-password" required placeholder="Password">
+                        <i class="fas fa-lock"></i>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="input-with-icon">
+                        <input type="password" id="register-confirm-password" required placeholder="Confirm Password">
+                        <i class="fas fa-lock"></i>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <select id="register-security-question" required>
+                        <option value="">Select a Security Question</option>
+                        <option value="pet">What was your first pet's name?</option>
+                        <option value="school">What was the name of your first school?</option>
+                        <option value="city">In which city were you born?</option>
+                        <option value="mother">What is your mother's maiden name?</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <div class="input-with-icon">
+                        <input type="text" id="register-security-answer" required placeholder="Security Answer">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="checkbox-container">
+                        <input type="checkbox" id="register-reminders">
+                        Enable SMS reminders
+                        <span class="checkmark"></span>
+                    </label>
+                </div>
+                <button type="submit" class="login-button">Create Account</button>
+                <div id="register-error" class="error-message"></div>
+            </form>
+        </div>
+    </div>
+
     <!-- Password Recovery Modal -->
     <div class="modal" id="recoveryModal">
         <div class="modal-content">
@@ -186,11 +250,53 @@
             <form id="recoveryForm">
                 <div class="form-group">
                     <div class="input-with-icon">
-                        <input type="email" id="recoveryEmail" required placeholder="Enter your email">
+                        <input type="email" id="recovery-email" required placeholder="Enter your email">
                         <i class="fas fa-envelope"></i>
                     </div>
                 </div>
-                <button type="submit" class="login-button">Send Reset Link</button>
+                <div id="security-question-container" style="display: none;">
+                    <p id="security-question-text" class="security-question"></p>
+                    <div class="form-group">
+                        <div class="input-with-icon">
+                            <input type="text" id="security-answer" required placeholder="Your Answer">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="input-with-icon">
+                            <input type="password" id="new-password" required placeholder="New Password">
+                            <i class="fas fa-lock"></i>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="input-with-icon">
+                            <input type="password" id="confirm-new-password" required placeholder="Confirm New Password">
+                            <i class="fas fa-lock"></i>
+                        </div>
+                    </div>
+                </div>
+                <button type="submit" class="login-button" id="recovery-submit">Continue</button>
+                <div id="recovery-error" class="error-message"></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Phone Verification Modal -->
+    <div class="modal" id="verificationModal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2>Verify Phone Number</h2>
+            <p>We've sent a verification code to your phone number.</p>
+            <form id="verificationForm">
+                <div class="form-group">
+                    <div class="input-with-icon">
+                        <input type="text" id="verification-code" required placeholder="Enter 6-digit code">
+                        <i class="fas fa-key"></i>
+                    </div>
+                </div>
+                <button type="submit" class="login-button">Verify</button>
+                <button type="button" class="resend-button">Resend Code</button>
+                <div id="verification-error" class="error-message"></div>
             </form>
         </div>
     </div>

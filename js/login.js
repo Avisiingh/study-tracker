@@ -194,34 +194,34 @@
     }
 
     // Handle user registration
-    function register(username, email, password) {
-        // Get existing users or initialize empty array
+    function register(username, email, password, phone, securityQuestion, securityAnswer) {
         const users = JSON.parse(localStorage.getItem('studyTrackerUsers') || '[]');
         
-        // Check if email already exists
         if (users.some(u => u.email === email)) {
             return { success: false, message: 'Email already registered' };
         }
         
-        // Generate a unique user ID
+        if (users.some(u => u.phone === phone)) {
+            return { success: false, message: 'Phone number already registered' };
+        }
+        
         const userId = generateUserId();
         
-        // Add new user with hashed password
         users.push({
             username,
             email,
-            hashedPassword: hashPassword(password), // Store hashed password instead of plain text
+            hashedPassword: hashPassword(password),
+            phone,
+            securityQuestion,
+            securityAnswer: hashPassword(securityAnswer.toLowerCase()),
             profilePic: generateInitialsAvatar(username),
             dateRegistered: new Date().toISOString(),
-            userId: userId
+            userId: userId,
+            reminderEnabled: false
         });
         
-        // Save updated users array
         localStorage.setItem('studyTrackerUsers', JSON.stringify(users));
-        
-        // Log in the new user
         login(email, password);
-        
         return { success: true };
     }
 
@@ -357,6 +357,9 @@
                 const email = document.getElementById('register-email').value;
                 const password = document.getElementById('register-password').value;
                 const confirmPassword = document.getElementById('register-confirm-password').value;
+                const phone = document.getElementById('register-phone').value;
+                const securityQuestion = document.getElementById('register-security-question').value;
+                const securityAnswer = document.getElementById('register-security-answer').value;
                 
                 const errorMsg = document.getElementById('register-error');
                 
@@ -386,7 +389,7 @@
                     return;
                 }
                 
-                const registerResult = register(username, email, password);
+                const registerResult = register(username, email, password, phone, securityQuestion, securityAnswer);
                 if (!registerResult.success) {
                     errorMsg.textContent = registerResult.message;
                     errorMsg.style.display = 'block';
@@ -765,6 +768,72 @@
             errorElement.textContent = 'An error occurred. Please try again.';
             errorElement.style.display = 'block';
         }
+    }
+
+    // Password recovery with security question
+    function recoverPassword(email, securityAnswer, newPassword) {
+        const users = JSON.parse(localStorage.getItem('studyTrackerUsers') || '[]');
+        const user = users.find(u => u.email === email);
+        
+        if (!user) {
+            return { success: false, message: 'User not found' };
+        }
+        
+        if (hashPassword(securityAnswer.toLowerCase()) !== user.securityAnswer) {
+            return { success: false, message: 'Incorrect security answer' };
+        }
+        
+        user.hashedPassword = hashPassword(newPassword);
+        localStorage.setItem('studyTrackerUsers', JSON.stringify(users));
+        
+        return { success: true, message: 'Password successfully reset' };
+    }
+
+    // Toggle SMS reminders
+    function toggleReminders(enabled) {
+        if (!userState.isLoggedIn) return false;
+        
+        const users = JSON.parse(localStorage.getItem('studyTrackerUsers') || '[]');
+        const userIndex = users.findIndex(u => u.userId === userState.userId);
+        
+        if (userIndex === -1) return false;
+        
+        users[userIndex].reminderEnabled = enabled;
+        localStorage.setItem('studyTrackerUsers', JSON.stringify(users));
+        
+        return true;
+    }
+
+    // Send SMS reminder (simulated)
+    function sendSMSReminder(phone, message) {
+        console.log(`Sending SMS to ${phone}: ${message}`);
+        // In a real app, this would use a proper SMS service
+        // For example: Twilio, MessageBird, or similar
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                resolve({ success: true, message: 'SMS sent successfully' });
+            }, 1000);
+        });
+    }
+
+    // Setup reminder system
+    function setupReminderSystem() {
+        const users = JSON.parse(localStorage.getItem('studyTrackerUsers') || '[]');
+        
+        users.forEach(async user => {
+            if (user.reminderEnabled) {
+                const lastActivity = new Date(user.lastActivityDate || 0);
+                const now = new Date();
+                const hoursSinceActivity = (now - lastActivity) / (1000 * 60 * 60);
+                
+                if (hoursSinceActivity >= 24) {
+                    await sendSMSReminder(
+                        user.phone,
+                        "Don't forget to maintain your study streak! Log in now to continue your progress."
+                    );
+                }
+            }
+        });
     }
 
     // Initialize when the DOM is ready
