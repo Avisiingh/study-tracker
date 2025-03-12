@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>100-Day Study Streak Tracker</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="light-mode">
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <h1>100-Day Study Streak</h1>
+                <div class="theme-toggle">
+                    <button id="theme-toggle-btn">
+                        <i class="fas fa-moon"></i>
+                        <i class="fas fa-sun"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <section class="streak-section">
+            <div class="streak-card">
+                <h2>Current Streak</h2>
+                <div class="streak-counter" id="streak-counter">0</div>
+                <p>Days of consistent studying</p>
+                <div class="streak-progress">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="streak-progress-fill"></div>
+                    </div>
+                    <div class="progress-text"><span id="streak-percentage">0</span>% to 100 days</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tab Navigation -->
+        <div class="tabs-container">
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="today">Today's Plan</button>
+                <button class="tab-btn" data-tab="feed">Study Feed</button>
+                <button class="tab-btn" data-tab="stats">Statistics</button>
+            </div>
+        </div>
+
+        <!-- Tab Content -->
+        <div class="tab-content">
+            <!-- Today's Plan Tab -->
+            <div class="tab-pane active" id="today-tab">
+                <div class="today-card">
+                    <h2>Today's Plan</h2>
+                    <div class="date-display" id="current-date">Loading date...</div>
+                    
+                    <div class="task-management">
+                        <h3>Tasks for Today</h3>
+                        <div class="task-input-container">
+                            <input type="text" id="new-task" placeholder="Add a new task...">
+                            <button id="add-task-btn">Add</button>
+                        </div>
+                        <ul id="task-list" class="task-list"></ul>
+                    </div>
+
+                    <div class="day-plan">
+                        <h3>Day Plan</h3>
+                        <textarea id="day-plan-input" placeholder="What's your plan for today? List your goals and what you intend to accomplish."></textarea>
+                    </div>
+
+                    <button id="save-day-btn" class="primary-btn">Complete Today's Entry</button>
+                </div>
+            </div>
+
+            <!-- Study Feed Tab -->
+            <div class="tab-pane" id="feed-tab">
+                <h2>Study Log Feed</h2>
+                <div class="compose-tweet">
+                    <textarea placeholder="Share your study progress or daily completion update..." id="quick-share-input"></textarea>
+                    <div class="compose-options">
+                        <label class="day-completion-option">
+                            <input type="checkbox" id="is-day-completion-check">
+                            <span>Mark as Day Completion</span>
+                        </label>
+                        <div class="hours-input-container">
+                            <label>Hours studied: </label>
+                            <input type="number" id="hours-studied-input" min="0" step="0.5" placeholder="0">
+                        </div>
+                    </div>
+                    <div class="compose-actions">
+                        <span class="char-count">0 characters</span>
+                        <button id="quick-share-btn" class="primary-btn">Share</button>
+                    </div>
+                </div>
+                <div id="study-feed" class="study-feed twitter-style">
+                    <!-- Study logs will be populated here -->
+                    <div class="empty-feed-message">No entries yet. Complete your first day to see it here!</div>
+                </div>
+            </div>
+
+            <!-- Statistics Tab -->
+            <div class="tab-pane" id="stats-tab">
+                <h2>Study Statistics</h2>
+                
+                <!-- Progress Dashboard -->
+                <div class="progress-dashboard">
+                    <div class="progress-card">
+                        <h3>100-Day Challenge Progress</h3>
+                        <div class="big-progress-bar">
+                            <div class="big-progress-fill" id="challenge-progress-fill"></div>
+                            <div class="progress-text-overlay">
+                                <span id="challenge-progress-days">0</span>/100 days
+                            </div>
+                        </div>
+                        <div class="progress-milestones">
+                            <div class="milestone" style="left: 25%"><span>25</span></div>
+                            <div class="milestone" style="left: 50%"><span>50</span></div>
+                            <div class="milestone" style="left: 75%"><span>75</span></div>
+                            <div class="milestone" style="left: 100%"><span>100</span></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fas fa-calendar-check"></i></div>
+                        <div class="stat-value" id="total-days">0</div>
+                        <div class="stat-label">Total Days</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fas fa-clock"></i></div>
+                        <div class="stat-value" id="total-hours">0</div>
+                        <div class="stat-label">Total Hours</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fas fa-tasks"></i></div>
+                        <div class="stat-value" id="completed-tasks">0</div>
+                        <div class="stat-label">Tasks Completed</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fas fa-trophy"></i></div>
+                        <div class="stat-value" id="avg-hours">0</div>
+                        <div class="stat-label">Avg Hours/Day</div>
+                    </div>
+                </div>
+                
+                <div class="stats-row">
+                    <div class="chart-container">
+                        <h3>Study Hours by Day</h3>
+                        <div class="study-chart" id="study-chart">
+                            <!-- Chart will be rendered here -->
+                            <div class="placeholder-chart">
+                                <div class="chart-bar" style="height: 30%"></div>
+                                <div class="chart-bar" style="height: 50%"></div>
+                                <div class="chart-bar" style="height: 70%"></div>
+                                <div class="chart-bar" style="height: 40%"></div>
+                                <div class="chart-bar" style="height: 60%"></div>
+                                <div class="chart-bar" style="height: 80%"></div>
+                                <div class="chart-bar" style="height: 45%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <h3>Study Distribution</h3>
+                        <div class="progress-circle-container">
+                            <div class="progress-circle">
+                                <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                                    <circle cx="50" cy="50" r="45" id="circle-bg" />
+                                    <circle cx="50" cy="50" r="45" id="circle-progress" />
+                                </svg>
+                                <div class="progress-circle-text" id="week-completion-rate">0%</div>
+                            </div>
+                            <div class="progress-circle-label">This Week's Completion</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="activity-calendar">
+                    <h3>Activity Heatmap</h3>
+                    <div class="calendar-header">
+                        <div>Mon</div>
+                        <div>Tue</div>
+                        <div>Wed</div>
+                        <div>Thu</div>
+                        <div>Fri</div>
+                        <div>Sat</div>
+                        <div>Sun</div>
+                    </div>
+                    <div class="calendar-grid" id="activity-heatmap">
+                        <!-- Calendar will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div class="modal" id="login-modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2>Admin Login</h2>
+            <div class="login-container">
+                <input type="password" id="admin-password" placeholder="Enter password">
+                <button id="login-btn" class="primary-btn">Login</button>
+                <p class="login-error" id="login-error"></p>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="settings-modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2>Settings</h2>
+            <div class="settings-container">
+                <div class="setting-group">
+                    <label for="manual-streak">Current Streak</label>
+                    <input type="number" id="manual-streak" min="0">
+                </div>
+                <div class="setting-group">
+                    <label for="download-format">Export Format</label>
+                    <select id="download-format">
+                        <option value="json">JSON</option>
+                        <option value="csv">CSV</option>
+                        <option value="markdown">Markdown</option>
+                    </select>
+                    <button id="export-data-btn" class="secondary-btn">Export Data</button>
+                </div>
+                <button id="save-settings-btn" class="primary-btn">Save Settings</button>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 100-Day Study Streak Tracker</p>
+            <div class="footer-links">
+                <button id="settings-btn">Settings</button>
+                <button id="admin-btn">Admin</button>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/ui-components.js"></script>
+    <script src="js/app.js"></script>
+    <script src="test-data.js"></script>
+</body>
+</html> 
