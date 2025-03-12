@@ -1,4 +1,5 @@
 // Login system for Study Tracker
+console.log('Loading Study Tracker Login System v1.0.1');
 
 // Utility functions
 function hashPassword(password) {
