@@ -409,7 +409,14 @@ function updateAuthUI() {
         header.className = 'app-header';
         document.body.insertBefore(header, document.body.firstChild);
         
-        // Create header right section if it doesn't exist
+        // Create app title
+        const appTitle = document.createElement('div');
+        appTitle.className = 'app-title';
+        appTitle.innerHTML = '<i class="fas fa-book-reader"></i> Study Tracker';
+        appTitle.onclick = () => redirectToHome();
+        header.appendChild(appTitle);
+        
+        // Create header right section
         const headerRight = document.createElement('div');
         headerRight.className = 'header-right';
         header.appendChild(headerRight);
@@ -423,6 +430,14 @@ function updateAuthUI() {
         header.appendChild(headerRight);
     }
     
+    // Create or update main content area
+    let mainContent = document.querySelector('.main-content');
+    if (!mainContent) {
+        mainContent = document.createElement('div');
+        mainContent.className = 'main-content';
+        document.body.appendChild(mainContent);
+    }
+    
     const loginElements = document.querySelectorAll('.login-box, .signup-box, .app-download');
     let userProfileContainer = document.querySelector('.user-profile-container');
     
@@ -431,14 +446,11 @@ function updateAuthUI() {
         headerRight.insertBefore(userProfileContainer, headerRight.firstChild);
     }
     
-    const authButtons = document.querySelector('.auth-buttons');
-    
     console.log('Updating UI with user state:', userState);
     
     if (userState.isLoggedIn) {
         // Hide login-related elements
         loginElements.forEach(el => el.style.display = 'none');
-        if (authButtons) authButtons.style.display = 'none';
         
         // Show and update user profile
         userProfileContainer.style.display = 'flex';
@@ -455,69 +467,416 @@ function updateAuthUI() {
         // Add header styles
         const headerStyles = document.createElement('style');
         headerStyles.textContent = `
+            :root {
+                --primary-color: #4a90e2;
+                --primary-dark: #357abd;
+                --secondary-color: #6c757d;
+                --success-color: #28a745;
+                --danger-color: #dc3545;
+                --warning-color: #ffc107;
+                --info-color: #17a2b8;
+                --background-color: #f8f9fa;
+                --card-background: #ffffff;
+                --text-primary: #333333;
+                --text-secondary: #666666;
+                --text-muted: #999999;
+                --border-color: #e9ecef;
+                --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
+                --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+                --shadow-lg: 0 10px 15px rgba(0,0,0,0.1);
+                --radius-sm: 4px;
+                --radius-md: 8px;
+                --radius-lg: 12px;
+                --spacing-xs: 0.25rem;
+                --spacing-sm: 0.5rem;
+                --spacing-md: 1rem;
+                --spacing-lg: 1.5rem;
+                --spacing-xl: 2rem;
+            }
+
+            body {
+                background-color: var(--background-color);
+                color: var(--text-primary);
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+                line-height: 1.5;
+                margin: 0;
+                padding: 0;
+            }
+            
             .app-header {
-                background: var(--card-background, #ffffff);
-                padding: 1rem;
+                background: var(--card-background);
+                padding: var(--spacing-md) var(--spacing-xl);
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
-                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                box-shadow: var(--shadow-md);
                 position: fixed;
                 top: 0;
                 left: 0;
                 right: 0;
                 z-index: 1000;
+                height: 60px;
+            }
+            
+            .app-title {
+                font-size: 1.5rem;
+                font-weight: 600;
+                color: var(--primary-color);
+                display: flex;
+                align-items: center;
+                gap: var(--spacing-sm);
+                cursor: pointer;
+                transition: color 0.2s;
+            }
+
+            .app-title:hover {
+                color: var(--primary-dark);
             }
             
             .user-profile-container {
+                position: relative;
                 display: flex;
                 align-items: center;
-                gap: 1rem;
+                gap: var(--spacing-md);
             }
             
             .user-avatar {
                 width: 40px;
                 height: 40px;
-                background: var(--primary-color, #4a90e2);
+                background: var(--primary-color);
                 color: white;
                 border-radius: 50%;
                 display: flex;
                 align-items: center;
                 justify-content: center;
                 font-weight: bold;
+                cursor: pointer;
+                transition: transform 0.2s, background-color 0.2s;
+            }
+
+            .user-avatar:hover {
+                transform: scale(1.05);
+                background: var(--primary-dark);
             }
             
             .user-info {
                 display: flex;
                 flex-direction: column;
+                cursor: pointer;
             }
             
             .user-name {
                 font-weight: 600;
-                color: var(--text-primary, #333);
+                color: var(--text-primary);
             }
             
-            .user-actions {
-                display: flex;
-                gap: 0.5rem;
-                margin-top: 0.5rem;
+            .user-dropdown {
+                position: absolute;
+                top: calc(100% + var(--spacing-sm));
+                right: 0;
+                background: var(--card-background);
+                border-radius: var(--radius-md);
+                box-shadow: var(--shadow-lg);
+                min-width: 220px;
+                display: none;
+                z-index: 1000;
+                border: 1px solid var(--border-color);
+                overflow: hidden;
             }
             
-            .nav-btn {
-                padding: 0.5rem 1rem;
-                border: none;
-                border-radius: 4px;
-                background: var(--primary-color, #4a90e2);
-                color: white;
-                cursor: pointer;
-                font-size: 0.9rem;
+            .user-dropdown.active {
+                display: block;
+                animation: dropdownFadeIn 0.2s ease-out;
+            }
+            
+            @keyframes dropdownFadeIn {
+                from {
+                    opacity: 0;
+                    transform: translateY(-10px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+            
+            .dropdown-item {
+                padding: var(--spacing-md);
                 display: flex;
                 align-items: center;
-                gap: 0.5rem;
+                gap: var(--spacing-sm);
+                color: var(--text-primary);
+                text-decoration: none;
+                cursor: pointer;
+                transition: all 0.2s;
             }
             
-            .nav-btn:hover {
-                background: var(--primary-color-dark, #357abd);
+            .dropdown-item:hover {
+                background: var(--background-color);
+                color: var(--primary-color);
+            }
+
+            .dropdown-item i {
+                width: 20px;
+                color: var(--primary-color);
+                transition: transform 0.2s;
+            }
+
+            .dropdown-item:hover i {
+                transform: translateX(2px);
+            }
+            
+            .dropdown-divider {
+                height: 1px;
+                background: var(--border-color);
+                margin: 0;
+            }
+            
+            .main-content {
+                margin-top: 80px;
+                padding: var(--spacing-xl);
+                max-width: 1200px;
+                margin-left: auto;
+                margin-right: auto;
+            }
+
+            .welcome-message {
+                text-align: center;
+                padding: var(--spacing-xl);
+                background: var(--card-background);
+                border-radius: var(--radius-lg);
+                box-shadow: var(--shadow-md);
+                margin-bottom: var(--spacing-xl);
+            }
+
+            .welcome-message h1 {
+                color: var(--text-primary);
+                margin-bottom: var(--spacing-md);
+                font-size: 2rem;
+            }
+
+            .welcome-message p {
+                color: var(--text-secondary);
+                font-size: 1.1rem;
+                margin: 0;
+            }
+            
+            .admin-panel {
+                background: var(--card-background);
+                border-radius: var(--radius-lg);
+                box-shadow: var(--shadow-md);
+                overflow: hidden;
+            }
+            
+            .admin-header {
+                padding: var(--spacing-lg);
+                border-bottom: 1px solid var(--border-color);
+                background: var(--background-color);
+            }
+            
+            .admin-header h2 {
+                margin: 0;
+                color: var(--text-primary);
+                display: flex;
+                align-items: center;
+                gap: var(--spacing-sm);
+                font-size: 1.5rem;
+            }
+            
+            .admin-content {
+                padding: var(--spacing-lg);
+            }
+            
+            .admin-section {
+                display: none;
+            }
+            
+            .admin-section.active {
+                display: block;
+                animation: sectionFadeIn 0.3s ease-out;
+            }
+
+            @keyframes sectionFadeIn {
+                from {
+                    opacity: 0;
+                }
+                to {
+                    opacity: 1;
+                }
+            }
+            
+            .admin-nav {
+                display: flex;
+                gap: var(--spacing-md);
+                margin-top: var(--spacing-md);
+                border-bottom: 1px solid var(--border-color);
+                padding-bottom: var(--spacing-sm);
+            }
+            
+            .admin-nav-item {
+                padding: var(--spacing-sm) var(--spacing-md);
+                border-radius: var(--radius-sm);
+                cursor: pointer;
+                color: var(--text-secondary);
+                transition: all 0.2s;
+                font-weight: 500;
+            }
+            
+            .admin-nav-item:hover {
+                color: var(--primary-color);
+                background: rgba(74, 144, 226, 0.1);
+            }
+            
+            .admin-nav-item.active {
+                background: var(--primary-color);
+                color: white;
+            }
+
+            .stats-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                gap: var(--spacing-md);
+                margin-top: var(--spacing-lg);
+            }
+
+            .stat-card {
+                background: var(--background-color);
+                padding: var(--spacing-lg);
+                border-radius: var(--radius-md);
+                box-shadow: var(--shadow-sm);
+                text-align: center;
+            }
+
+            .stat-card h4 {
+                color: var(--text-secondary);
+                margin: 0 0 var(--spacing-sm);
+                font-size: 1rem;
+            }
+
+            .stat-card p {
+                color: var(--text-primary);
+                font-size: 2rem;
+                font-weight: 600;
+                margin: 0;
+            }
+
+            .user-list {
+                display: grid;
+                gap: var(--spacing-md);
+                margin-top: var(--spacing-lg);
+            }
+
+            .user-item {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: var(--spacing-md);
+                background: var(--background-color);
+                border-radius: var(--radius-md);
+                box-shadow: var(--shadow-sm);
+            }
+
+            .user-item .user-info {
+                display: flex;
+                align-items: center;
+                gap: var(--spacing-md);
+            }
+
+            .user-item .user-avatar {
+                width: 36px;
+                height: 36px;
+                font-size: 0.9rem;
+            }
+
+            .user-item .user-details {
+                display: flex;
+                flex-direction: column;
+                gap: var(--spacing-xs);
+            }
+
+            .user-item .user-name {
+                font-weight: 600;
+                color: var(--text-primary);
+            }
+
+            .user-item .user-email {
+                color: var(--text-secondary);
+                font-size: 0.9rem;
+            }
+
+            .user-actions {
+                display: flex;
+                gap: var(--spacing-sm);
+            }
+
+            .admin-btn {
+                padding: var(--spacing-sm) var(--spacing-md);
+                border: none;
+                border-radius: var(--radius-sm);
+                background: var(--primary-color);
+                color: white;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                gap: var(--spacing-sm);
+                font-size: 0.9rem;
+                transition: all 0.2s;
+            }
+
+            .admin-btn:hover {
+                background: var(--primary-dark);
+                transform: translateY(-1px);
+            }
+
+            .admin-btn.small {
+                padding: var(--spacing-xs) var(--spacing-sm);
+            }
+
+            .admin-btn.danger {
+                background: var(--danger-color);
+            }
+
+            .admin-btn.danger:hover {
+                background: #c82333;
+            }
+
+            .data-actions {
+                display: flex;
+                gap: var(--spacing-md);
+                margin-top: var(--spacing-lg);
+            }
+
+            @media (max-width: 768px) {
+                .app-header {
+                    padding: var(--spacing-md);
+                }
+
+                .main-content {
+                    padding: var(--spacing-md);
+                }
+
+                .stats-grid {
+                    grid-template-columns: 1fr;
+                }
+
+                .admin-nav {
+                    flex-wrap: wrap;
+                }
+
+                .data-actions {
+                    flex-direction: column;
+                }
+
+                .user-item {
+                    flex-direction: column;
+                    align-items: flex-start;
+                    gap: var(--spacing-md);
+                }
+
+                .user-actions {
+                    width: 100%;
+                    justify-content: flex-end;
+                }
             }
         `;
         
@@ -525,14 +884,31 @@ function updateAuthUI() {
             headerStyles.setAttribute('data-header-styles', '');
             document.head.appendChild(headerStyles);
         }
+        
+        // Show welcome message in main content if not in admin view
+        if (!document.querySelector('.admin-panel')) {
+            mainContent.innerHTML = `
+                <div class="welcome-message">
+                    <h1>Welcome back, ${userState.username}! 👋</h1>
+                    <p>Ready to continue your learning journey? Track your study progress and maintain your streak.</p>
+                </div>
+                <div class="quick-actions">
+                    <!-- Add quick action buttons here -->
+                </div>
+            `;
+        }
     } else {
         // Show login-related elements
         loginElements.forEach(el => el.style.display = 'block');
-        if (authButtons) authButtons.style.display = 'flex';
         
         // Hide user profile
         if (userProfileContainer) {
             userProfileContainer.style.display = 'none';
+        }
+        
+        // Clear main content
+        if (mainContent) {
+            mainContent.innerHTML = '';
         }
     }
 }
@@ -547,7 +923,7 @@ function createUserProfileContainer() {
     
     const avatar = document.createElement('div');
     avatar.className = 'user-avatar';
-    avatar.textContent = userState.profilePic;
+    avatar.textContent = userState.profilePic || generateInitialsAvatar(userState.username);
     
     const info = document.createElement('div');
     info.className = 'user-info';
@@ -556,208 +932,149 @@ function createUserProfileContainer() {
     name.className = 'user-name';
     name.textContent = userState.username;
     
-    const actions = document.createElement('div');
-    actions.className = 'user-actions';
-    
-    const profileBtn = document.createElement('button');
-    profileBtn.className = 'nav-btn profile-btn';
-    profileBtn.innerHTML = '<i class="fas fa-user"></i> Profile';
-    profileBtn.onclick = () => showProfile();
-    
-    const databaseBtn = document.createElement('button');
-    databaseBtn.className = 'nav-btn database-btn';
-    databaseBtn.innerHTML = '<i class="fas fa-database"></i> Database';
-    databaseBtn.onclick = () => showDatabaseView();
-    
-    const settingsBtn = document.createElement('button');
-    settingsBtn.className = 'nav-btn settings-btn';
-    settingsBtn.innerHTML = '<i class="fas fa-cog"></i> Settings';
-    settingsBtn.onclick = () => showSettings();
-    
-    const logoutBtn = document.createElement('button');
-    logoutBtn.className = 'nav-btn logout-btn';
-    logoutBtn.innerHTML = '<i class="fas fa-sign-out-alt"></i> Logout';
-    logoutBtn.onclick = () => handleLogout();
-    
-    actions.appendChild(profileBtn);
-    actions.appendChild(databaseBtn);
-    actions.appendChild(settingsBtn);
-    actions.appendChild(logoutBtn);
+    const dropdown = document.createElement('div');
+    dropdown.className = 'user-dropdown';
+    dropdown.innerHTML = `
+        <div class="dropdown-item" onclick="showProfile()">
+            <i class="fas fa-user"></i>
+            <span>Profile</span>
+        </div>
+        <div class="dropdown-item" onclick="showSettings()">
+            <i class="fas fa-cog"></i>
+            <span>Settings</span>
+        </div>
+        <div class="dropdown-item" onclick="showAdminPanel()">
+            <i class="fas fa-shield-alt"></i>
+            <span>Admin Panel</span>
+        </div>
+        <div class="dropdown-divider"></div>
+        <div class="dropdown-item" onclick="handleLogout()">
+            <i class="fas fa-sign-out-alt"></i>
+            <span>Logout</span>
+        </div>
+    `;
     
     info.appendChild(name);
-    info.appendChild(actions);
-    
     profile.appendChild(avatar);
     profile.appendChild(info);
-    
     container.appendChild(profile);
+    container.appendChild(dropdown);
     
-    // Add container to header if it doesn't exist
-    const headerRight = document.querySelector('.header-right');
-    if (headerRight && !headerRight.querySelector('.user-profile-container')) {
-        headerRight.insertBefore(container, headerRight.firstChild);
-    }
+    // Toggle dropdown on click
+    const toggleDropdown = () => {
+        dropdown.classList.toggle('active');
+    };
+    
+    avatar.addEventListener('click', toggleDropdown);
+    info.addEventListener('click', toggleDropdown);
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!container.contains(e.target)) {
+            dropdown.classList.remove('active');
+        }
+    });
     
     return container;
 }
 
-// Show database view
-function showDatabaseView() {
+// Show admin panel
+function showAdminPanel() {
     const mainContent = document.querySelector('.main-content');
     if (!mainContent) return;
-
-    // Clear existing content
-    mainContent.innerHTML = '';
-
-    // Create database view
-    const databaseView = document.createElement('div');
-    databaseView.className = 'database-view';
-
-    // Create header
-    const header = document.createElement('div');
-    header.className = 'database-header';
-    header.innerHTML = `
-        <h2><i class="fas fa-database"></i> Database Management</h2>
-        <div class="database-actions">
-            <button class="action-btn"><i class="fas fa-download"></i> Export</button>
-            <button class="action-btn"><i class="fas fa-upload"></i> Import</button>
-            <button class="action-btn warning"><i class="fas fa-trash"></i> Reset</button>
+    
+    mainContent.innerHTML = `
+        <div class="admin-panel">
+            <div class="admin-header">
+                <h2><i class="fas fa-shield-alt"></i> Admin Panel</h2>
+                <div class="admin-nav">
+                    <div class="admin-nav-item active" data-section="overview">Overview</div>
+                    <div class="admin-nav-item" data-section="users">Users</div>
+                    <div class="admin-nav-item" data-section="data">Data Management</div>
+                    <div class="admin-nav-item" data-section="settings">Settings</div>
+                </div>
+            </div>
+            <div class="admin-content">
+                <div class="admin-section active" data-section="overview">
+                    <h3>System Overview</h3>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <h4>Total Users</h4>
+                            <p>${JSON.parse(localStorage.getItem('studyTrackerUsers') || '[]').length}</p>
+                        </div>
+                        <div class="stat-card">
+                            <h4>Study Sessions</h4>
+                            <p>${JSON.parse(localStorage.getItem('studyTrackerSessions') || '[]').length}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="admin-section" data-section="users">
+                    <h3>User Management</h3>
+                    <div class="user-list">
+                        ${createUserList()}
+                    </div>
+                </div>
+                <div class="admin-section" data-section="data">
+                    <h3>Data Management</h3>
+                    <div class="data-actions">
+                        <button onclick="exportData()" class="admin-btn">
+                            <i class="fas fa-download"></i> Export Data
+                        </button>
+                        <button onclick="importData()" class="admin-btn">
+                            <i class="fas fa-upload"></i> Import Data
+                        </button>
+                        <button onclick="resetData()" class="admin-btn danger">
+                            <i class="fas fa-trash"></i> Reset Data
+                        </button>
+                    </div>
+                </div>
+                <div class="admin-section" data-section="settings">
+                    <h3>System Settings</h3>
+                    <p>System settings coming soon...</p>
+                </div>
+            </div>
         </div>
     `;
-
-    // Create tabs
-    const tabs = document.createElement('div');
-    tabs.className = 'database-tabs';
-    tabs.innerHTML = `
-        <button class="tab-btn active" data-tab="study-data">Study Data</button>
-        <button class="tab-btn" data-tab="user-data">User Data</button>
-        <button class="tab-btn" data-tab="app-settings">App Settings</button>
-    `;
-
-    // Create content area
-    const content = document.createElement('div');
-    content.className = 'database-content';
-
-    // Study Data Section
-    const studyData = document.createElement('div');
-    studyData.className = 'database-section active';
-    studyData.setAttribute('data-section', 'study-data');
-    studyData.innerHTML = createDataCard('Study Sessions', localStorage.getItem('studyTrackerSessions') || '[]');
-
-    // User Data Section
-    const userData = document.createElement('div');
-    userData.className = 'database-section';
-    userData.setAttribute('data-section', 'user-data');
-    const sanitizedUserData = JSON.parse(localStorage.getItem('studyTrackerUsers') || '[]').map(user => ({
-        ...user,
-        hashedPassword: '********' // Hide sensitive data
-    }));
-    userData.innerHTML = createDataCard('User Accounts', JSON.stringify(sanitizedUserData, null, 2));
-
-    // App Settings Section
-    const appSettings = document.createElement('div');
-    appSettings.className = 'database-section';
-    appSettings.setAttribute('data-section', 'app-settings');
-    appSettings.innerHTML = createDataCard('Application Settings', localStorage.getItem('studyTrackerSettings') || '{}');
-
-    // Add all sections to content
-    content.appendChild(studyData);
-    content.appendChild(userData);
-    content.appendChild(appSettings);
-
-    // Add event listeners for tabs
-    tabs.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            // Update active tab
-            tabs.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-
+    
+    // Add event listeners for navigation
+    const navItems = mainContent.querySelectorAll('.admin-nav-item');
+    navItems.forEach(item => {
+        item.addEventListener('click', () => {
+            // Update active nav item
+            navItems.forEach(nav => nav.classList.remove('active'));
+            item.classList.add('active');
+            
             // Show corresponding section
-            const targetSection = btn.getAttribute('data-tab');
-            content.querySelectorAll('.database-section').forEach(section => {
+            const targetSection = item.getAttribute('data-section');
+            const sections = mainContent.querySelectorAll('.admin-section');
+            sections.forEach(section => {
                 section.classList.toggle('active', section.getAttribute('data-section') === targetSection);
             });
         });
     });
-
-    // Add event listeners for actions
-    header.querySelector('button:nth-child(1)').addEventListener('click', exportData);
-    header.querySelector('button:nth-child(2)').addEventListener('click', importData);
-    header.querySelector('button:nth-child(3)').addEventListener('click', resetData);
-
-    // Assemble the view
-    databaseView.appendChild(header);
-    databaseView.appendChild(tabs);
-    databaseView.appendChild(content);
-    mainContent.appendChild(databaseView);
 }
 
-function createDataCard(title, data) {
-    return `
-        <div class="data-card">
-            <h3><i class="fas fa-table"></i> ${title}</h3>
-            <pre>${typeof data === 'string' ? data : JSON.stringify(data, null, 2)}</pre>
+function createUserList() {
+    const users = JSON.parse(localStorage.getItem('studyTrackerUsers') || '[]');
+    return users.map(user => `
+        <div class="user-item">
+            <div class="user-info">
+                <div class="user-avatar">${generateInitialsAvatar(user.username)}</div>
+                <div class="user-details">
+                    <div class="user-name">${user.username}</div>
+                    <div class="user-email">${user.email}</div>
+                </div>
+            </div>
+            <div class="user-actions">
+                <button class="admin-btn small" onclick="editUser('${user.userId}')">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="admin-btn small danger" onclick="deleteUser('${user.userId}')">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
         </div>
-    `;
-}
-
-function exportData() {
-    const data = {
-        sessions: JSON.parse(localStorage.getItem('studyTrackerSessions') || '[]'),
-        users: JSON.parse(localStorage.getItem('studyTrackerUsers') || '[]').map(user => ({
-            ...user,
-            hashedPassword: '********' // Hide sensitive data
-        })),
-        settings: JSON.parse(localStorage.getItem('studyTrackerSettings') || '{}')
-    };
-
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'study-tracker-backup.json';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-}
-
-function importData() {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.json';
-    input.onchange = async (e) => {
-        try {
-            const file = e.target.files[0];
-            const text = await file.text();
-            const data = JSON.parse(text);
-
-            // Validate data structure
-            if (!data.sessions || !data.users || !data.settings) {
-                throw new Error('Invalid backup file format');
-            }
-
-            // Import data
-            localStorage.setItem('studyTrackerSessions', JSON.stringify(data.sessions));
-            localStorage.setItem('studyTrackerUsers', JSON.stringify(data.users));
-            localStorage.setItem('studyTrackerSettings', JSON.stringify(data.settings));
-
-            // Refresh view
-            showDatabaseView();
-            alert('Data imported successfully!');
-        } catch (error) {
-            alert('Error importing data: ' + error.message);
-        }
-    };
-    input.click();
-}
-
-function resetData() {
-    if (confirm('Are you sure you want to reset all data? This action cannot be undone.')) {
-        localStorage.clear();
-        showDatabaseView();
-        alert('All data has been reset.');
-    }
+    `).join('');
 }
 
 function showProfile() {
@@ -766,6 +1083,234 @@ function showProfile() {
 }
 
 function showSettings() {
-    // Settings view implementation (to be added)
-    alert('Settings view coming soon!');
+    const mainContent = document.querySelector('.main-content');
+    if (!mainContent) return;
+    
+    mainContent.innerHTML = `
+        <div class="settings-panel">
+            <div class="settings-header">
+                <h2><i class="fas fa-cog"></i> Settings</h2>
+            </div>
+            <div class="settings-content">
+                <div class="settings-section">
+                    <h3>Profile Settings</h3>
+                    <div class="settings-form">
+                        <div class="form-group">
+                            <label for="display-name">Display Name</label>
+                            <input type="text" id="display-name" value="${userState.username}" />
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <input type="email" id="email" value="${userState.email}" readonly />
+                        </div>
+                        <button class="admin-btn" onclick="updateProfile()">
+                            <i class="fas fa-save"></i> Save Changes
+                        </button>
+                    </div>
+                </div>
+                <div class="settings-section">
+                    <h3>Appearance</h3>
+                    <div class="theme-selector">
+                        <button class="admin-btn" onclick="setTheme('light')">
+                            <i class="fas fa-sun"></i> Light Mode
+                        </button>
+                        <button class="admin-btn" onclick="setTheme('dark')">
+                            <i class="fas fa-moon"></i> Dark Mode
+                        </button>
+                    </div>
+                </div>
+                <div class="settings-section">
+                    <h3>Security</h3>
+                    <div class="security-settings">
+                        <button class="admin-btn" onclick="changePassword()">
+                            <i class="fas fa-key"></i> Change Password
+                        </button>
+                        <button class="admin-btn" onclick="enable2FA()">
+                            <i class="fas fa-shield-alt"></i> Enable 2FA
+                        </button>
+                    </div>
+                </div>
+                <div class="settings-section">
+                    <h3>Notifications</h3>
+                    <div class="notification-settings">
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="email-notifications" />
+                                Email Notifications
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="push-notifications" />
+                                Push Notifications
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Add styles for settings panel
+    const settingsStyles = document.createElement('style');
+    settingsStyles.textContent = `
+        .settings-panel {
+            max-width: 800px;
+            margin: 0 auto;
+            background: var(--card-background);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            overflow: hidden;
+        }
+
+        .settings-header {
+            padding: var(--spacing-lg);
+            border-bottom: 1px solid var(--border-color);
+            background: var(--background-color);
+        }
+
+        .settings-header h2 {
+            margin: 0;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            font-size: 1.5rem;
+        }
+
+        .settings-content {
+            padding: var(--spacing-lg);
+        }
+
+        .settings-section {
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .settings-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .settings-section h3 {
+            color: var(--text-primary);
+            margin: 0 0 var(--spacing-md);
+            font-size: 1.2rem;
+        }
+
+        .form-group {
+            margin-bottom: var(--spacing-md);
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: var(--spacing-xs);
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .form-group input[type="text"],
+        .form-group input[type="email"] {
+            width: 100%;
+            padding: var(--spacing-sm);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            font-size: 1rem;
+            color: var(--text-primary);
+            background: var(--background-color);
+        }
+
+        .form-group input[type="text"]:focus,
+        .form-group input[type="email"]:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.1);
+        }
+
+        .form-group input[readonly] {
+            background: var(--background-color);
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .theme-selector,
+        .security-settings {
+            display: flex;
+            gap: var(--spacing-md);
+            margin-top: var(--spacing-sm);
+        }
+
+        .notification-settings {
+            margin-top: var(--spacing-sm);
+        }
+
+        .notification-settings .form-group {
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .notification-settings label {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            cursor: pointer;
+            color: var(--text-primary);
+        }
+
+        .notification-settings input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--primary-color);
+        }
+
+        @media (max-width: 768px) {
+            .theme-selector,
+            .security-settings {
+                flex-direction: column;
+            }
+
+            .admin-btn {
+                width: 100%;
+            }
+        }
+    `;
+
+    if (!document.querySelector('style[data-settings-styles]')) {
+        settingsStyles.setAttribute('data-settings-styles', '');
+        document.head.appendChild(settingsStyles);
+    }
+}
+
+// Placeholder functions for settings actions
+function updateProfile() {
+    const displayName = document.getElementById('display-name').value;
+    if (displayName && displayName !== userState.username) {
+        userState.username = displayName;
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        currentUser.username = displayName;
+        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+        
+        const users = JSON.parse(localStorage.getItem('studyTrackerUsers') || '[]');
+        const updatedUsers = users.map(u => {
+            if (u.userId === userState.userId) {
+                return { ...u, username: displayName };
+            }
+            return u;
+        });
+        localStorage.setItem('studyTrackerUsers', JSON.stringify(updatedUsers));
+        
+        updateAuthUI();
+        alert('Profile updated successfully!');
+    }
+}
+
+function setTheme(theme) {
+    document.body.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+    alert(`${theme.charAt(0).toUpperCase() + theme.slice(1)} theme applied!`);
+}
+
+function changePassword() {
+    alert('Change password functionality coming soon!');
+}
+
+function enable2FA() {
+    alert('Two-factor authentication coming soon!');
 }
