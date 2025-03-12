@@ -30,14 +30,8 @@ function showError(message, elementId = 'login-error') {
     if (errorElement) {
         errorElement.textContent = message;
         errorElement.style.display = 'block';
-        errorElement.style.backgroundColor = '#ffebee';
-        errorElement.style.color = '#d32f2f';
-        errorElement.style.padding = '12px';
-        errorElement.style.borderRadius = '4px';
-        errorElement.style.marginBottom = '16px';
-        errorElement.style.border = '1px solid #ef5350';
         
-        // Clear the error after 5 seconds
+        // Clear error after 5 seconds
         setTimeout(() => {
             errorElement.style.display = 'none';
         }, 5000);
@@ -78,7 +72,7 @@ function loginUser(user) {
     // Redirect after a short delay
     setTimeout(() => {
         console.log('Redirecting to home page');
-        redirectToHome();
+        window.location.href = window.location.protocol + '//' + window.location.host + getBasePath();
     }, 500);
 }
 
@@ -122,18 +116,43 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Set up form event listeners
     const loginForm = document.getElementById('loginForm');
-    console.log('Login form found:', !!loginForm);
+    const registerForm = document.getElementById('registerForm');
+    const recoveryForm = document.getElementById('recoveryForm');
+    
+    console.log('Forms found:', {
+        loginForm: !!loginForm,
+        registerForm: !!registerForm,
+        recoveryForm: !!recoveryForm
+    });
     
     if (loginForm) {
         loginForm.addEventListener('submit', function(e) {
             e.preventDefault();
-            console.log('Form submitted');
+            console.log('Login form submitted');
             handleLogin(e);
+        });
+    }
+    
+    if (registerForm) {
+        registerForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            console.log('Register form submitted');
+            handleRegister(e);
+        });
+    }
+    
+    if (recoveryForm) {
+        recoveryForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            console.log('Recovery form submitted');
+            handlePasswordRecovery(e);
         });
     }
     
     // Modal triggers
     const showRegisterBtn = document.getElementById('showRegisterForm');
+    const forgotPasswordLink = document.getElementById('forgotPasswordLink');
+    
     if (showRegisterBtn) {
         showRegisterBtn.addEventListener('click', function(e) {
             e.preventDefault();
@@ -143,6 +162,33 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+    
+    if (forgotPasswordLink) {
+        forgotPasswordLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            const recoveryModal = document.getElementById('recoveryModal');
+            if (recoveryModal) {
+                recoveryModal.style.display = 'flex';
+            }
+        });
+    }
+    
+    // Close modal functionality
+    document.querySelectorAll('.close-modal').forEach(button => {
+        button.addEventListener('click', function() {
+            this.closest('.modal').style.display = 'none';
+        });
+    });
+    
+    // Close modals when clicking outside
+    window.addEventListener('click', function(e) {
+        if (e.target.classList.contains('modal')) {
+            e.target.style.display = 'none';
+        }
+    });
+
+    // Initialize authentication
+    initAuth();
 });
 
 // User authentication system
@@ -562,7 +608,3 @@ function showSettings() {
     // Settings view implementation (to be added)
     alert('Settings view coming soon!');
 }
-
-// Initialize when DOM is ready
-initAuth();
-updateAuthUI();
