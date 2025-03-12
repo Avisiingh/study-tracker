@@ -3,108 +3,204 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Login - Study Streak Tracker</title>
-    <link rel="stylesheet" href="css/styles.css">
+    <title>Study Streak Tracker - Your Learning Journey</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --primary-color: #4361ee;
+            --primary-dark: #3046c7;
+            --secondary-color: #f72585;
+            --success-color: #4caf50;
+            --danger-color: #f44336;
+            --warning-color: #ff9800;
+            --info-color: #2196f3;
+            --background-color: #f8f9fa;
+            --card-background: #ffffff;
+            --text-primary: #2d3748;
+            --text-secondary: #718096;
+            --border-color: #e2e8f0;
+            --input-background: #f8fafc;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.12);
+            --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 15px rgba(0,0,0,0.1);
+            --radius-sm: 0.375rem;
+            --radius-md: 0.5rem;
+            --radius-lg: 1rem;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-primary);
+            line-height: 1.5;
+        }
+
         .login-page {
             min-height: 100vh;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            background: var(--card-background);
+        }
+
+        .login-illustration {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
             display: flex;
             align-items: center;
             justify-content: center;
-            background-color: var(--background-color);
-        }
-        
-        .login-container {
-            background: var(--card-background);
             padding: 2rem;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .illustration-content {
+            color: white;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+            max-width: 500px;
+        }
+
+        .illustration-content h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+        }
+
+        .illustration-content p {
+            font-size: 1.125rem;
+            opacity: 0.9;
+            margin-bottom: 2rem;
+        }
+
+        .features-list {
+            list-style: none;
+            text-align: left;
+            margin-top: 2rem;
+        }
+
+        .features-list li {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+            font-size: 1.125rem;
+        }
+
+        .features-list li i {
+            margin-right: 1rem;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 0.5rem;
+            border-radius: 50%;
+        }
+
+        .login-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .login-box {
             width: 100%;
             max-width: 400px;
-            margin: 1rem;
         }
-        
+
         .login-header {
             text-align: center;
             margin-bottom: 2rem;
         }
-        
-        .login-header h1 {
+
+        .login-header h2 {
+            font-size: 2rem;
             color: var(--text-primary);
-            font-size: 1.8rem;
             margin-bottom: 0.5rem;
         }
-        
-        .login-form {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-        
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-        
-        .form-group label {
-            color: var(--text-primary);
-            font-weight: 500;
-        }
-        
-        .form-group input {
-            padding: 0.75rem;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            font-size: 1rem;
-            background: var(--input-background);
-            color: var(--text-primary);
-        }
-        
-        .login-btn {
-            background: var(--primary-color);
-            color: white;
-            padding: 0.75rem;
-            border: none;
-            border-radius: 6px;
-            font-size: 1rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-        
-        .login-btn:hover {
-            background: var(--primary-color-dark);
-        }
-        
-        .login-footer {
-            margin-top: 1.5rem;
-            text-align: center;
+
+        .login-header p {
             color: var(--text-secondary);
         }
-        
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-md);
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: var(--input-background);
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 0.875rem;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .login-btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+
+        .login-footer {
+            text-align: center;
+            margin-top: 2rem;
+        }
+
         .login-footer a {
             color: var(--primary-color);
             text-decoration: none;
             font-weight: 500;
+            transition: color 0.3s ease;
         }
-        
+
+        .login-footer a:hover {
+            color: var(--primary-dark);
+            text-decoration: underline;
+        }
+
         .error-message {
-            color: #d32f2f;
-            background: #ffebee;
-            padding: 12px;
-            border-radius: 4px;
-            margin-bottom: 16px;
+            background: #fee2e2;
+            border: 1px solid #ef4444;
+            color: #b91c1c;
+            padding: 0.75rem 1rem;
+            border-radius: var(--radius-md);
+            margin-bottom: 1rem;
+            font-size: 0.875rem;
             display: none;
-            border: 1px solid #ef5350;
-            font-weight: 500;
-            text-align: center;
         }
-        
+
         .modal {
             display: none;
             position: fixed;
@@ -113,109 +209,179 @@
             width: 100%;
             height: 100%;
             background: rgba(0, 0, 0, 0.5);
-            justify-content: center;
-            align-items: center;
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
         }
-        
+
         .modal-content {
             background: var(--card-background);
+            border-radius: var(--radius-lg);
             padding: 2rem;
-            border-radius: 12px;
             width: 90%;
             max-width: 500px;
             position: relative;
+            margin: 2rem auto;
+            box-shadow: var(--shadow-lg);
+            animation: slideIn 0.3s ease;
         }
-        
+
         .close-modal {
             position: absolute;
-            right: 1rem;
-            top: 1rem;
+            right: 1.5rem;
+            top: 1.5rem;
             font-size: 1.5rem;
-            cursor: pointer;
             color: var(--text-secondary);
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .close-modal:hover {
+            color: var(--text-primary);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .login-page {
+                grid-template-columns: 1fr;
+            }
+
+            .login-illustration {
+                display: none;
+            }
+
+            .login-container {
+                padding: 1rem;
+            }
         }
     </style>
 </head>
-<body class="light-mode">
+<body>
     <div class="login-page">
-        <div class="login-container">
-            <div class="login-header">
-                <h1>Welcome Back</h1>
-                <p>Sign in to continue your study streak</p>
+        <div class="login-illustration">
+            <div class="illustration-content">
+                <h1>Welcome to Study Streak Tracker</h1>
+                <p>Your personal learning companion that helps you stay consistent and achieve your educational goals.</p>
+                <ul class="features-list">
+                    <li><i class="fas fa-chart-line"></i> Track your study progress</li>
+                    <li><i class="fas fa-calendar-check"></i> Maintain daily streaks</li>
+                    <li><i class="fas fa-trophy"></i> Earn achievements</li>
+                    <li><i class="fas fa-users"></i> Join study groups</li>
+                </ul>
             </div>
-            
-            <div id="login-error" class="error-message"></div>
-            
-            <form id="loginForm" class="login-form">
-                <div class="form-group">
-                    <label for="email">Email</label>
-                    <input type="email" id="email" name="email" required placeholder="Enter your email">
+        </div>
+
+        <div class="login-container">
+            <div class="login-box">
+                <div class="login-header">
+                    <h2>Welcome Back</h2>
+                    <p>Sign in to continue your learning journey</p>
                 </div>
-                
-                <div class="form-group">
-                    <label for="password">Password</label>
-                    <input type="password" id="password" name="password" required placeholder="Enter your password">
+
+                <div id="login-error" class="error-message"></div>
+
+                <form id="loginForm" class="login-form">
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" name="email" required 
+                               placeholder="Enter your email">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" name="password" required 
+                               placeholder="Enter your password">
+                    </div>
+
+                    <button type="submit" class="login-btn">
+                        <i class="fas fa-sign-in-alt"></i> Log In
+                    </button>
+                </form>
+
+                <div class="login-footer">
+                    <p>Don't have an account? <a href="#" id="showRegisterForm">Sign Up</a></p>
+                    <p><a href="#" id="forgotPasswordLink">Forgot Password?</a></p>
                 </div>
-                
-                <button type="submit" class="login-btn">Log In</button>
-            </form>
-            
-            <div class="login-footer">
-                <p>Don't have an account? <a href="#" id="showRegisterForm">Sign Up</a></p>
-                <p><a href="#" id="forgotPasswordLink">Forgot Password?</a></p>
             </div>
         </div>
     </div>
-    
+
     <!-- Registration Modal -->
     <div class="modal" id="registerModal">
         <div class="modal-content">
             <span class="close-modal">&times;</span>
             <h2>Create Account</h2>
+            <p>Join our community of learners</p>
             <div id="register-error" class="error-message"></div>
             <form id="registerForm">
                 <div class="form-group">
                     <label for="register-username">Username</label>
-                    <input type="text" id="register-username" required>
+                    <input type="text" id="register-username" required 
+                           placeholder="Choose a username">
                 </div>
                 <div class="form-group">
                     <label for="register-email">Email</label>
-                    <input type="email" id="register-email" required>
+                    <input type="email" id="register-email" required 
+                           placeholder="Enter your email">
                 </div>
                 <div class="form-group">
                     <label for="register-password">Password</label>
-                    <input type="password" id="register-password" required>
+                    <input type="password" id="register-password" required 
+                           placeholder="Choose a strong password">
                 </div>
                 <div class="form-group">
                     <label for="register-confirm-password">Confirm Password</label>
-                    <input type="password" id="register-confirm-password" required>
+                    <input type="password" id="register-confirm-password" required 
+                           placeholder="Confirm your password">
                 </div>
                 <div class="form-group">
                     <label for="register-phone">Phone Number</label>
-                    <input type="tel" id="register-phone" required>
+                    <input type="tel" id="register-phone" required 
+                           placeholder="Enter your phone number">
                 </div>
                 <div class="form-group">
                     <label for="register-security-question">Security Question</label>
-                    <input type="text" id="register-security-question" required placeholder="Enter a security question">
+                    <input type="text" id="register-security-question" required 
+                           placeholder="Enter a security question">
                 </div>
                 <div class="form-group">
                     <label for="register-security-answer">Security Answer</label>
-                    <input type="text" id="register-security-answer" required placeholder="Enter your answer">
+                    <input type="text" id="register-security-answer" required 
+                           placeholder="Enter your answer">
                 </div>
-                <button type="submit" class="login-btn">Create Account</button>
+                <button type="submit" class="login-btn">
+                    <i class="fas fa-user-plus"></i> Create Account
+                </button>
             </form>
         </div>
     </div>
-    
+
     <!-- Password Recovery Modal -->
     <div id="recoveryModal" class="modal">
         <div class="modal-content">
             <span class="close-modal">&times;</span>
             <h2>Password Recovery</h2>
+            <p>We'll help you get back into your account</p>
             <form id="recoveryForm">
                 <div class="form-group">
                     <label for="recovery-email">Email</label>
-                    <input type="email" id="recovery-email" required>
+                    <input type="email" id="recovery-email" required 
+                           placeholder="Enter your email">
                 </div>
                 <div id="security-question-container" style="display: none;">
                     <div class="form-group">
@@ -224,23 +390,28 @@
                     </div>
                     <div class="form-group">
                         <label for="security-answer">Answer</label>
-                        <input type="text" id="security-answer" required>
+                        <input type="text" id="security-answer" required 
+                               placeholder="Enter your answer">
                     </div>
                     <div class="form-group">
                         <label for="new-password">New Password</label>
-                        <input type="password" id="new-password" required minlength="6">
+                        <input type="password" id="new-password" required minlength="6" 
+                               placeholder="Enter new password">
                     </div>
                     <div class="form-group">
                         <label for="confirm-new-password">Confirm New Password</label>
-                        <input type="password" id="confirm-new-password" required minlength="6">
+                        <input type="password" id="confirm-new-password" required minlength="6" 
+                               placeholder="Confirm new password">
                     </div>
                 </div>
                 <div class="error-message" id="recovery-error"></div>
-                <button type="submit" id="recovery-submit" class="btn btn-primary">Continue</button>
+                <button type="submit" id="recovery-submit" class="login-btn">
+                    <i class="fas fa-key"></i> Continue
+                </button>
             </form>
         </div>
     </div>
 
-    <script src="js/login.js?v=1.0.1" defer></script>
+    <script src="js/login.js?v=1.0.2" defer></script>
 </body>
 </html> 

@@ -240,6 +240,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initialize authentication
     initAuth();
+
+    // Initialize theme
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.body.setAttribute('data-theme', savedTheme);
 });
 
 // User authentication system
@@ -1199,4 +1203,93 @@ function changePassword() {
 
 function enable2FA() {
     alert('Two-factor authentication coming soon!');
+}
+
+// Add missing functions for admin panel
+function exportData() {
+    const data = {
+        users: JSON.parse(localStorage.getItem('studyTrackerUsers') || '[]'),
+        sessions: JSON.parse(localStorage.getItem('studyTrackerSessions') || '[]')
+    };
+    
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'study-tracker-backup.json';
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+}
+
+function importData() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    
+    input.onchange = e => {
+        const file = e.target.files[0];
+        const reader = new FileReader();
+        
+        reader.onload = event => {
+            try {
+                const data = JSON.parse(event.target.result);
+                if (data.users && data.sessions) {
+                    localStorage.setItem('studyTrackerUsers', JSON.stringify(data.users));
+                    localStorage.setItem('studyTrackerSessions', JSON.stringify(data.sessions));
+                    alert('Data imported successfully!');
+                    window.location.reload();
+                } else {
+                    throw new Error('Invalid data format');
+                }
+            } catch (error) {
+                alert('Error importing data: ' + error.message);
+            }
+        };
+        
+        reader.readAsText(file);
+    };
+    
+    input.click();
+}
+
+function resetData() {
+    if (confirm('Are you sure you want to reset all data? This action cannot be undone.')) {
+        localStorage.clear();
+        alert('All data has been reset.');
+        window.location.reload();
+    }
+}
+
+function editUser(userId) {
+    const users = JSON.parse(localStorage.getItem('studyTrackerUsers') || '[]');
+    const user = users.find(u => u.userId === userId);
+    
+    if (!user) {
+        alert('User not found');
+        return;
+    }
+    
+    const newUsername = prompt('Enter new username:', user.username);
+    if (newUsername && newUsername !== user.username) {
+        const updatedUsers = users.map(u => {
+            if (u.userId === userId) {
+                return { ...u, username: newUsername };
+            }
+            return u;
+        });
+        
+        localStorage.setItem('studyTrackerUsers', JSON.stringify(updatedUsers));
+        showAdminPanel(); // Refresh the admin panel
+    }
+}
+
+function deleteUser(userId) {
+    if (confirm('Are you sure you want to delete this user?')) {
+        const users = JSON.parse(localStorage.getItem('studyTrackerUsers') || '[]');
+        const updatedUsers = users.filter(u => u.userId !== userId);
+        localStorage.setItem('studyTrackerUsers', JSON.stringify(updatedUsers));
+        showAdminPanel(); // Refresh the admin panel
+    }
 }
