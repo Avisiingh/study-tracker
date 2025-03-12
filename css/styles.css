@@ -2565,4 +2565,149 @@ pre {
     to {
         opacity: 1;
     }
+}
+
+/* Mobile Responsive Styles */
+@media screen and (max-width: 768px) {
+    /* Header adjustments */
+    .header-content {
+        flex-direction: column;
+        padding: 10px;
+        gap: 10px;
+    }
+
+    .header-right {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    /* User profile container */
+    .user-profile-container {
+        width: 100%;
+    }
+
+    .user-profile {
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .user-actions {
+        flex-direction: column;
+        width: 100%;
+        gap: 5px;
+    }
+
+    /* Main content */
+    .container {
+        padding: 10px;
+    }
+
+    .streak-card {
+        padding: 15px;
+    }
+
+    /* Tabs */
+    .tabs {
+        flex-wrap: wrap;
+        gap: 5px;
+    }
+
+    .tab-btn {
+        flex: 1 1 auto;
+        min-width: 100px;
+        padding: 8px;
+        font-size: 14px;
+    }
+
+    /* Task management */
+    .task-input-container {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .task-input-container input {
+        width: 100%;
+    }
+
+    .task-input-container button {
+        width: 100%;
+    }
+
+    /* Statistics grid */
+    .stats-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+
+    .stat-card {
+        padding: 10px;
+    }
+
+    /* Charts */
+    .stats-row {
+        flex-direction: column;
+    }
+
+    .chart-container {
+        width: 100%;
+        margin-bottom: 20px;
+    }
+
+    /* Database view */
+    .database-header {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .database-actions {
+        flex-wrap: wrap;
+        gap: 5px;
+    }
+
+    .action-btn {
+        flex: 1;
+        min-width: 120px;
+    }
+
+    /* Login page */
+    .login-container {
+        width: 90%;
+        max-width: none;
+        margin: 20px;
+        padding: 20px;
+    }
+
+    .social-login-button {
+        width: 100%;
+    }
+
+    .store-buttons {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .store-button {
+        width: 100%;
+    }
+}
+
+/* Small phones */
+@media screen and (max-width: 480px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .header-content h1 {
+        font-size: 20px;
+    }
+
+    .streak-counter {
+        font-size: 36px;
+    }
+
+    .tab-btn {
+        font-size: 12px;
+        padding: 6px;
+    }
 } 
