@@ -1,143 +1,143 @@
 # 100-Day Study Streak Tracker
 
-A static website that helps you track your 100-day study streak challenge. The application allows you to track your daily study habits, log your progress, and maintain a streak counter for consistent studying.
-
-![Screenshot of the 100-Day Study Streak Tracker](assets/images/screenshot.png)
+A web application to track your study streak for 100 days. This application helps you maintain a consistent study habit by tracking your daily study sessions, managing your tasks, and visualizing your progress.
 
 ## Features
 
-- **Daily Streak Tracker**: Displays the number of consecutive study days completed
-- **Task List**: Add, manage, and track completion of daily tasks
-- **Study Log**: Record study activities and track hours (minimum 6 hours per day recommended)
-- **Achievements**: Document your daily accomplishments
-- **Twitter-Style Feed**: View your study logs in a Twitter-like interface with profile avatars, engagement actions, and timestamps
-- **Quick Share**: Post short study updates without creating a full day entry
-- **Statistics Dashboard**: Track total study hours, completed tasks, and view visual study trends
-- **Tabbed Interface**: Easily navigate between Today's Plan, Study Feed, and Statistics
-- **Local Storage**: All data is saved in your browser's local storage
-- **Dark/Light Mode**: Toggle between dark and light themes
-- **Export Data**: Export your study logs in JSON, CSV, or Markdown format
-- **Admin Panel**: Simple password protection for editing streak data
-- **Responsive Design**: Works on mobile, tablet, and desktop devices
+- **Daily Streak Tracking**: Track your consecutive study days and maintain your streak.
+- **Task Management**: Create, edit, and complete tasks for your study sessions.
+- **Study Logging**: Log your daily study sessions with notes and hours studied.
+- **Progress Visualization**: View detailed statistics and progress towards your 100-day goal.
+  - Streak progress bar
+  - Challenge progress dashboard with milestone markers
+  - Weekly completion rate
+  - Activity heatmap for the past 3 months
+- **Achievements**: Celebrate milestone achievements with special effects.
+
+### Multi-User Support and Security
+
+- **User Authentication**: Secure login and registration system
+- **Data Isolation**: Each user has their own isolated data storage
+- **Password Security**: Password hashing and strength requirements
+- **User Settings**:
+  - Password change functionality
+  - Data export options
+  - User profile management
 
 ## Getting Started
 
 ### Prerequisites
 
-- A modern web browser (Chrome, Firefox, Safari, Edge)
-- A GitHub account (if you want to deploy on GitHub Pages)
+- Modern web browser (Chrome, Firefox, Safari, Edge)
+- Internet connection for GitHub Pages deployment
 
 ### Local Setup
 
 1. Clone the repository:
-```bash
-git clone https://github.com/yourusername/100-day-streak-tracker.git
-cd 100-day-streak-tracker
-```
+   ```
+   git clone https://github.com/yourusername/study-tracker.git
+   ```
 
-2. Open `index.html` in your browser or use a local development server.
+2. Open the `index.html` file in your web browser.
 
 ### GitHub Pages Deployment
 
-1. Create a new repository on GitHub
-2. Push your code to the repository:
-```bash
-git remote set-url origin https://github.com/yourusername/your-repo-name.git
-git push -u origin main
-```
+The application is deployed at: https://avisiingh.github.io/study-tracker/
 
-3. Go to your repository settings, scroll down to "GitHub Pages"
-4. Select the branch you want to deploy (usually `main`)
-5. Your site will be published at `https://yourusername.github.io/your-repo-name/`
+To deploy your own version:
+
+1. Fork the repository.
+2. Go to the repository settings.
+3. Navigate to the "Pages" section.
+4. Select the branch you want to deploy (e.g., `gh-pages` or `main`).
+5. Click "Save".
 
 ## Usage
 
-### Navigating the App
+### User Authentication
 
-The application is organized into three main tabs:
-1. **Today's Plan**: Where you add tasks and log your daily study progress
-2. **Study Feed**: A Twitter-like feed showing all your entries and quick updates
-3. **Statistics**: Visual dashboard of your study habits over time
+1. **First-time users**:
+   - You'll be redirected to the login page
+   - Click "Register" to create a new account
+   - Provide a username, email, and secure password (min 6 chars, 1 uppercase, 1 number)
+   - You'll be automatically logged in after registration
 
-### Adding Tasks
+2. **Returning users**:
+   - Enter your email and password on the login page
+   - Your study data will be loaded automatically
 
-1. Go to the **Today's Plan** tab
-2. Type your task in the "Add a new task..." input field
-3. Press Enter or click the "Add" button to add the task
-4. Check off tasks as you complete them
+3. **User Settings**:
+   - Access user settings from the settings panel
+   - Change your password
+   - Export your study data as JSON
 
-### Logging Your Day
+### Tracking Your Studies
 
-1. Enter what you studied in the "Study Log" textarea
-2. Input how many hours you studied (warning will appear if less than 6 hours)
-3. Document your achievements for the day (optional)
-4. Click "Complete Today's Entry" to save your progress
+1. **Add a task**:
+   - Click on the "+" button in the Task List section.
+   - Enter a task description.
+   - Click "Add Task" or press Enter.
 
-### Quick Share Updates
+2. **Log a study day**:
+   - Use the Quick Share feature at the top of the page.
+   - Enter what you studied and for how many hours.
+   - Click "Share" or press Enter.
+   - Your streak will update automatically.
 
-1. Go to the **Study Feed** tab
-2. Type a short update in the "Share your study progress..." field
-3. Click "Share" to post it immediately without affecting your streak
+3. **View your statistics**:
+   - See your current streak in the Streak Card.
+   - View detailed statistics in the Statistics section.
+   - Check the Weekly Completion and Activity Heatmap for patterns.
 
-### Viewing Statistics
+4. **Plan your day**:
+   - Use the Day Plan feature to outline your study goals.
+   - Track completed tasks to stay organized.
 
-The **Statistics** tab provides:
-- Total number of study days
-- Total hours studied
-- Number of tasks completed
-- Average hours studied per day
-- Visual chart of your recent study hours
+### Interface Navigation
 
-### Viewing Your Progress
-
-Your study logs will appear in the "Study Feed" tab, displaying:
-- The date and time of each entry
-- Which day of the streak it was
-- How many hours you studied
-- What you studied
-- Your achievements
-- Tasks completed that day
-- Interactive actions (like, comment, share)
-
-### Admin Access
-
-To edit streak data:
-1. Click "Admin" or "Settings" in the footer
-2. Enter the default password: `admin123`
-3. Adjust your streak count manually
-4. Save your settings
-
-### Data Export
-
-1. Go to Settings
-2. Select your preferred format (JSON, CSV, Markdown)
-3. Click "Export Data" to download
+- **Feed Tab**: View your study log history and progress.
+- **Tasks Tab**: Manage your study tasks and track completion.
+- **Statistics Tab**: View detailed stats about your study habits.
+- **Settings Tab**: Customize the application and manage your user account.
 
 ## Customization
 
-### Changing the Admin Password
+### Personalization
 
-For security reasons, you should change the default admin password. Open `js/app.js` and modify the `adminPassword` value:
+- You can update your user settings in the Settings tab.
+- Change your password or export your data for backup.
 
-```javascript
-const appState = {
-    // ...
-    adminPassword: 'your-new-password',
-    // ...
-};
-```
+### Data Storage
 
-### Customizing Colors
+- Your data is stored locally on your device using localStorage.
+- Each user's data is stored separately using unique user IDs.
+- You can export your data from the user settings panel.
 
-The application uses CSS variables for consistent theming. You can modify the colors by editing the `:root` section in `css/styles.css`.
+### Security Considerations
 
-## Data Storage
+- Passwords are hashed before storage for enhanced security.
+- Password requirements enforce good security practices.
+- The application includes data isolation between users.
+- **Note**: While improvements have been made, this is a client-side application with inherent security limitations:
+  - Data is stored in localStorage which is specific to the browser/device
+  - For production use, consider implementing a backend server with proper database
 
-All data is stored in your browser's local storage. This means:
+## Multi-User Support
 
-- Your data persists between browser sessions
-- Clearing your browser data will erase your streak information
-- You can export your data and import it on another device (using the admin panel)
+The application now supports multiple users with security enhancements:
+
+- **User Registration**: Create new user accounts with unique credentials
+- **Data Isolation**: Each user has their own isolated data set
+- **Profile Management**: View and manage your user profile
+- **Password Security**: Improved password security with hashing and strength requirements
+- **Export Functionality**: Export your study data for backup or transfer
+
+### Data Portability
+
+You can export your study data as a JSON file, which allows you to:
+- Back up your study progress
+- Transfer your data to another device
+- Share your study log (manually) with others
 
 ## Contributing
 
@@ -149,6 +149,5 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## Acknowledgements
 
-- Font Awesome for icons
-- Google Fonts for the Inter font family
-- GitHub Pages for hosting 
+- This project was created to help students and lifelong learners maintain consistent study habits.
+- Special thanks to all contributors who have helped improve this application. 
