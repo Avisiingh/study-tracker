@@ -60,15 +60,27 @@ function redirectToLogin() {
 // Login user and set session
 function loginUser(user) {
     console.log('Attempting to log in user:', user.email);
+    
+    // Update user state
+    userState.isLoggedIn = true;
+    userState.username = user.username;
+    userState.email = user.email;
+    userState.profilePic = user.profilePic || generateInitialsAvatar(user.username);
+    userState.userId = user.userId;
+    
+    // Save to localStorage
     const userInfo = {
         username: user.username,
         email: user.email,
-        profilePic: user.profilePic || generateInitialsAvatar(user.username),
+        profilePic: userState.profilePic,
         userId: user.userId
     };
     
     localStorage.setItem('currentUser', JSON.stringify(userInfo));
     console.log('User info saved to localStorage');
+    
+    // Update UI before redirecting
+    updateAuthUI();
     
     // Redirect after a short delay
     setTimeout(() => {
@@ -390,28 +402,138 @@ function handlePasswordRecovery(event) {
 
 // Update UI based on authentication state
 function updateAuthUI() {
+    // First, ensure we have a header
+    let header = document.querySelector('header');
+    if (!header) {
+        header = document.createElement('header');
+        header.className = 'app-header';
+        document.body.insertBefore(header, document.body.firstChild);
+        
+        // Create header right section if it doesn't exist
+        const headerRight = document.createElement('div');
+        headerRight.className = 'header-right';
+        header.appendChild(headerRight);
+    }
+    
+    // Ensure we have a header-right section
+    let headerRight = header.querySelector('.header-right');
+    if (!headerRight) {
+        headerRight = document.createElement('div');
+        headerRight.className = 'header-right';
+        header.appendChild(headerRight);
+    }
+    
     const loginElements = document.querySelectorAll('.login-box, .signup-box, .app-download');
-    const userProfileContainer = document.querySelector('.user-profile-container') || createUserProfileContainer();
+    let userProfileContainer = document.querySelector('.user-profile-container');
+    
+    if (!userProfileContainer) {
+        userProfileContainer = createUserProfileContainer();
+        headerRight.insertBefore(userProfileContainer, headerRight.firstChild);
+    }
+    
     const authButtons = document.querySelector('.auth-buttons');
+    
+    console.log('Updating UI with user state:', userState);
     
     if (userState.isLoggedIn) {
         // Hide login-related elements
         loginElements.forEach(el => el.style.display = 'none');
         if (authButtons) authButtons.style.display = 'none';
         
-        // Show user profile
+        // Show and update user profile
         userProfileContainer.style.display = 'flex';
         const userAvatar = userProfileContainer.querySelector('.user-avatar');
         const userName = userProfileContainer.querySelector('.user-name');
-        if (userAvatar) userAvatar.textContent = userState.profilePic;
-        if (userName) userName.textContent = userState.username;
+        
+        if (userAvatar) {
+            userAvatar.textContent = userState.profilePic || generateInitialsAvatar(userState.username);
+        }
+        if (userName) {
+            userName.textContent = userState.username;
+        }
+        
+        // Add header styles
+        const headerStyles = document.createElement('style');
+        headerStyles.textContent = `
+            .app-header {
+                background: var(--card-background, #ffffff);
+                padding: 1rem;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                z-index: 1000;
+            }
+            
+            .user-profile-container {
+                display: flex;
+                align-items: center;
+                gap: 1rem;
+            }
+            
+            .user-avatar {
+                width: 40px;
+                height: 40px;
+                background: var(--primary-color, #4a90e2);
+                color: white;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: bold;
+            }
+            
+            .user-info {
+                display: flex;
+                flex-direction: column;
+            }
+            
+            .user-name {
+                font-weight: 600;
+                color: var(--text-primary, #333);
+            }
+            
+            .user-actions {
+                display: flex;
+                gap: 0.5rem;
+                margin-top: 0.5rem;
+            }
+            
+            .nav-btn {
+                padding: 0.5rem 1rem;
+                border: none;
+                border-radius: 4px;
+                background: var(--primary-color, #4a90e2);
+                color: white;
+                cursor: pointer;
+                font-size: 0.9rem;
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+            }
+            
+            .nav-btn:hover {
+                background: var(--primary-color-dark, #357abd);
+            }
+        `;
+        
+        if (!document.querySelector('style[data-header-styles]')) {
+            headerStyles.setAttribute('data-header-styles', '');
+            document.head.appendChild(headerStyles);
+        }
     } else {
         // Show login-related elements
         loginElements.forEach(el => el.style.display = 'block');
         if (authButtons) authButtons.style.display = 'flex';
         
         // Hide user profile
-        userProfileContainer.style.display = 'none';
+        if (userProfileContainer) {
+            userProfileContainer.style.display = 'none';
+        }
     }
 }
 
