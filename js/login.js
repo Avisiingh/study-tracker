@@ -26,7 +26,7 @@
     // Initialize authentication
     function initAuth() {
         // Check if user is already logged in
-        const savedUser = localStorage.getItem('studyTrackerUser');
+        const savedUser = sessionStorage.getItem('studyTrackerUser');
         if (savedUser) {
             try {
                 const parsedUser = JSON.parse(savedUser);
@@ -48,7 +48,7 @@
                 }
             } catch (error) {
                 console.error('Error parsing saved user data:', error);
-                localStorage.removeItem('studyTrackerUser');
+                sessionStorage.removeItem('studyTrackerUser');
             }
         } else if (!window.location.href.includes('login.html') && 
                   !window.location.href.includes('register.html')) {
@@ -156,13 +156,13 @@
 
     // Handle user login
     function login(email, password) {
-        // Simulate authentication (in a real app, this would validate against a server)
+        // Get users from localStorage (shared across the application)
         const users = JSON.parse(localStorage.getItem('studyTrackerUsers') || '[]');
         const hashedPassword = hashPassword(password);
         const user = users.find(u => u.email === email && u.hashedPassword === hashedPassword);
         
         if (user) {
-            // Store logged in user (never store passwords in localStorage for real apps)
+            // Store logged in user in sessionStorage (temporary for this session)
             const userInfo = {
                 username: user.username,
                 email: user.email,
@@ -170,7 +170,7 @@
                 userId: user.userId
             };
             
-            localStorage.setItem('studyTrackerUser', JSON.stringify(userInfo));
+            sessionStorage.setItem('studyTrackerUser', JSON.stringify(userInfo));
             
             // Update app state
             userState.isLoggedIn = true;
@@ -179,7 +179,7 @@
             userState.profilePic = user.profilePic || generateInitialsAvatar(user.username);
             userState.userId = user.userId;
             
-            // Load user-specific data
+            // Load user-specific data from localStorage
             loadUserData(user.userId);
             
             // Update UI
@@ -207,7 +207,8 @@
         
         const userId = generateUserId();
         
-        users.push({
+        // Create new user object
+        const newUser = {
             username,
             email,
             hashedPassword: hashPassword(password),
@@ -218,9 +219,21 @@
             dateRegistered: new Date().toISOString(),
             userId: userId,
             reminderEnabled: false
-        });
+        };
         
+        // Add user to shared storage
+        users.push(newUser);
         localStorage.setItem('studyTrackerUsers', JSON.stringify(users));
+        
+        // Initialize user data storage
+        localStorage.setItem(`studyTracker_appData_${userId}`, JSON.stringify({
+            streak: 0,
+            lastCompletedDate: null,
+            tasks: [],
+            logs: []
+        }));
+        
+        // Log in the new user
         login(email, password);
         return { success: true };
     }
@@ -233,8 +246,8 @@
             localStorage.setItem(`studyTracker_appData_${userState.userId}`, JSON.stringify(appData));
         }
         
-        // Clear user data from localStorage
-        localStorage.removeItem('studyTrackerUser');
+        // Clear session data
+        sessionStorage.removeItem('studyTrackerUser');
         
         // Reset app state
         userState.isLoggedIn = false;
