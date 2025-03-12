@@ -2062,4 +2062,507 @@ pre {
         background: var(--bg-color-dark);
         border: 1px solid rgba(255, 255, 255, 0.1);
     }
+}
+
+/* User Profile Styles */
+.user-profile-container {
+    display: none;
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    padding: 15px;
+    z-index: 1000;
+}
+
+.user-profile {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #1a73e8, #1557b0);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    font-size: 18px;
+}
+
+.user-info {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.user-name {
+    font-weight: 600;
+    color: #333;
+    font-size: 16px;
+}
+
+.user-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.nav-btn {
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    color: white;
+}
+
+.nav-btn i {
+    font-size: 16px;
+}
+
+.profile-btn {
+    background-color: #1a73e8;
+}
+
+.profile-btn:hover {
+    background-color: #1557b0;
+    transform: translateY(-2px);
+}
+
+.database-btn {
+    background-color: #6c757d;
+}
+
+.database-btn:hover {
+    background-color: #5a6268;
+    transform: translateY(-2px);
+}
+
+.settings-btn {
+    background-color: #17a2b8;
+}
+
+.settings-btn:hover {
+    background-color: #138496;
+    transform: translateY(-2px);
+}
+
+.logout-btn {
+    background-color: #dc3545;
+}
+
+.logout-btn:hover {
+    background-color: #c82333;
+    transform: translateY(-2px);
+}
+
+/* Database View Styles */
+.database-view {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    margin: 20px 0;
+    overflow: hidden;
+    animation: slideIn 0.3s ease;
+}
+
+.database-header {
+    padding: 20px;
+    background: linear-gradient(135deg, #1a73e8, #1557b0);
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.database-header h2 {
+    color: white;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.database-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.action-btn {
+    padding: 8px 16px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+}
+
+.action-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+}
+
+.action-btn.warning {
+    background: rgba(220, 53, 69, 0.2);
+}
+
+.action-btn.warning:hover {
+    background: rgba(220, 53, 69, 0.3);
+}
+
+.database-tabs {
+    display: flex;
+    padding: 0 20px;
+    background: white;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.database-tabs .tab-btn {
+    padding: 15px 20px;
+    background: none;
+    border: none;
+    color: #666;
+    cursor: pointer;
+    font-weight: 500;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.database-tabs .tab-btn:hover {
+    color: #1a73e8;
+}
+
+.database-tabs .tab-btn.active {
+    color: #1a73e8;
+}
+
+.database-tabs .tab-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: #1a73e8;
+}
+
+.database-content {
+    padding: 20px;
+}
+
+.database-section {
+    display: none;
+    animation: fadeIn 0.3s ease;
+}
+
+.database-section.active {
+    display: block;
+}
+
+.data-card {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.data-card h3 {
+    margin-bottom: 15px;
+    color: #333;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.data-card pre {
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    overflow-x: auto;
+    font-family: 'Monaco', 'Consolas', monospace;
+    font-size: 14px;
+    line-height: 1.4;
+    border: 1px solid #e0e0e0;
+}
+
+/* Dark Mode Adjustments */
+.dark-mode .database-view {
+    background: #1e1e1e;
+}
+
+.dark-mode .database-tabs {
+    background: #1e1e1e;
+    border-color: #333;
+}
+
+.dark-mode .data-card {
+    background: #2d2d2d;
+}
+
+.dark-mode .data-card pre {
+    background: #1e1e1e;
+    border-color: #333;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .database-header {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .database-actions {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .database-tabs {
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+
+    .action-btn {
+        padding: 6px 12px;
+        font-size: 13px;
+    }
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* Main Content Area */
+.main-content {
+    padding: 20px;
+    margin-top: 20px;
+    min-height: 400px;
+    position: relative;
+}
+
+/* Database View */
+.database-view {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    margin: 20px 0;
+    overflow: hidden;
+    animation: slideIn 0.3s ease;
+}
+
+.database-header {
+    padding: 20px;
+    background: linear-gradient(135deg, #1a73e8, #1557b0);
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.database-header h2 {
+    color: white;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.database-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.action-btn {
+    padding: 8px 16px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+}
+
+.action-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+}
+
+.action-btn.warning {
+    background: rgba(220, 53, 69, 0.2);
+}
+
+.action-btn.warning:hover {
+    background: rgba(220, 53, 69, 0.3);
+}
+
+.database-tabs {
+    display: flex;
+    padding: 0 20px;
+    background: white;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.database-tabs .tab-btn {
+    padding: 15px 20px;
+    background: none;
+    border: none;
+    color: #666;
+    cursor: pointer;
+    font-weight: 500;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.database-tabs .tab-btn:hover {
+    color: #1a73e8;
+}
+
+.database-tabs .tab-btn.active {
+    color: #1a73e8;
+}
+
+.database-tabs .tab-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: #1a73e8;
+}
+
+.database-content {
+    padding: 20px;
+}
+
+.database-section {
+    display: none;
+    animation: fadeIn 0.3s ease;
+}
+
+.database-section.active {
+    display: block;
+}
+
+.data-card {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.data-card h3 {
+    margin-bottom: 15px;
+    color: #333;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.data-card pre {
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    overflow-x: auto;
+    font-family: 'Monaco', 'Consolas', monospace;
+    font-size: 14px;
+    line-height: 1.4;
+    border: 1px solid #e0e0e0;
+}
+
+/* Dark Mode Adjustments */
+.dark-mode .database-view {
+    background: #1e1e1e;
+}
+
+.dark-mode .database-tabs {
+    background: #1e1e1e;
+    border-color: #333;
+}
+
+.dark-mode .data-card {
+    background: #2d2d2d;
+}
+
+.dark-mode .data-card pre {
+    background: #1e1e1e;
+    border-color: #333;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .database-header {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .database-actions {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .database-tabs {
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+
+    .action-btn {
+        padding: 6px 12px;
+        font-size: 13px;
+    }
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
 } 

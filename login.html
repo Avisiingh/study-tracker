@@ -126,7 +126,7 @@
                     <p class="welcome-text">Track your 100-day study journey</p>
                 </div>
 
-                <form id="loginForm" class="login-form">
+                <form id="loginForm" class="login-form" onsubmit="return false;">
                     <div class="form-group">
                         <div class="input-with-icon">
                             <input type="email" id="email" name="email" required placeholder="Email">
@@ -140,7 +140,7 @@
                         </div>
                     </div>
                     <div id="login-error" class="error-message"></div>
-                    <button type="submit" class="login-button">
+                    <button type="submit" class="login-button" onclick="handleLogin(event)">
                         <span>Log In</span>
                     </button>
 
