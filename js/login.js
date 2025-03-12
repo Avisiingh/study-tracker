@@ -86,9 +86,7 @@
             return '/';
         } else {
             // Local development or other hosting
-            return pathName.endsWith('/') 
-                ? pathName 
-                : pathName.substring(0, pathName.lastIndexOf('/') + 1);
+            return '/';
         }
     }
 
@@ -1086,149 +1084,10 @@
     }
 
     // Initialize when the DOM is ready
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initializeLoginPage);
-    } else {
-        initializeLoginPage();
-    }
-
-    function initializeLoginPage() {
-        // Login form
-        const loginForm = document.getElementById('loginForm');
-        if (loginForm) {
-            loginForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-                const email = document.getElementById('email').value;
-                const password = document.getElementById('password').value;
-                
-                const loginResult = login(email, password);
-                if (!loginResult) {
-                    showError('Invalid email or password');
-                }
-            });
-        }
-
-        // Forgot password link
-        const forgotPasswordLink = document.getElementById('forgotPasswordLink');
-        if (forgotPasswordLink) {
-            forgotPasswordLink.addEventListener('click', function(e) {
-                e.preventDefault();
-                const recoveryModal = document.getElementById('recoveryModal');
-                recoveryModal.style.display = 'flex';
-            });
-        }
-
-        // Show register form
-        const showRegisterBtn = document.getElementById('showRegisterForm');
-        if (showRegisterBtn) {
-            showRegisterBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                const registerModal = document.getElementById('registerModal');
-                registerModal.style.display = 'flex';
-            });
-        }
-
-        // Google login
-        const googleLoginBtn = document.querySelector('.google-login');
-        if (googleLoginBtn) {
-            googleLoginBtn.addEventListener('click', function() {
-                // Simulate Google OAuth flow
-                showMessage('Google login is currently under development. Please use email login.');
-            });
-        }
-
-        // Close modal buttons
-        document.querySelectorAll('.close-modal').forEach(button => {
-            button.addEventListener('click', function() {
-                this.closest('.modal').style.display = 'none';
-            });
-        });
-
-        // Register form
-        const registerForm = document.getElementById('registerForm');
-        if (registerForm) {
-            registerForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-                
-                const username = document.getElementById('register-username').value;
-                const email = document.getElementById('register-email').value;
-                const phone = document.getElementById('register-phone').value;
-                const password = document.getElementById('register-password').value;
-                const confirmPassword = document.getElementById('register-confirm-password').value;
-                const securityQuestion = document.getElementById('register-security-question').value;
-                const securityAnswer = document.getElementById('register-security-answer').value;
-                const enableReminders = document.getElementById('register-reminders').checked;
-
-                if (password !== confirmPassword) {
-                    showError('Passwords do not match', 'register-error');
-                    return;
-                }
-
-                if (password.length < 6) {
-                    showError('Password must be at least 6 characters', 'register-error');
-                    return;
-                }
-
-                const registerResult = register(username, email, password, phone, securityQuestion, securityAnswer);
-                if (registerResult.success) {
-                    if (enableReminders) {
-                        toggleReminders(true);
-                    }
-                    document.getElementById('registerModal').style.display = 'none';
-                    showMessage('Registration successful! You can now log in.');
-                } else {
-                    showError(registerResult.message, 'register-error');
-                }
-            });
-        }
-
-        // Password recovery form
-        const recoveryForm = document.getElementById('recoveryForm');
-        if (recoveryForm) {
-            recoveryForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-                
-                const email = document.getElementById('recovery-email').value;
-                const securityContainer = document.getElementById('security-question-container');
-                const securityAnswer = document.getElementById('security-answer');
-                const newPassword = document.getElementById('new-password');
-                
-                if (!securityContainer.style.display || securityContainer.style.display === 'none') {
-                    // First step: Find account
-                    const users = JSON.parse(localStorage.getItem('studyTrackerUsers') || '[]');
-                    const user = users.find(u => u.email === email);
-                    
-                    if (!user) {
-                        showError('No account found with this email', 'recovery-error');
-                        return;
-                    }
-
-                    // Show security question
-                    securityContainer.style.display = 'block';
-                    document.getElementById('security-question-text').textContent = getSecurityQuestion(user.securityQuestion);
-                    document.getElementById('recovery-submit').textContent = 'Reset Password';
-                } else {
-                    // Second step: Reset password
-                    const answer = securityAnswer.value;
-                    const password = newPassword.value;
-                    const confirmPassword = document.getElementById('confirm-new-password').value;
-
-                    if (password !== confirmPassword) {
-                        showError('Passwords do not match', 'recovery-error');
-                        return;
-                    }
-
-                    const resetResult = recoverPassword(email, answer, password);
-                    if (resetResult.success) {
-                        document.getElementById('recoveryModal').style.display = 'none';
-                        showMessage('Password reset successful! You can now log in with your new password.');
-                    } else {
-                        showError(resetResult.message, 'recovery-error');
-                    }
-                }
-            });
-        }
-    }
+    document.addEventListener('DOMContentLoaded', function() {
+        initAuth();
+        setupAuthEvents();
+    });
 
     // Helper function to show error messages
     function showError(message, elementId = 'login-error') {
@@ -1236,6 +1095,19 @@
         if (errorElement) {
             errorElement.textContent = message;
             errorElement.style.display = 'block';
+        } else {
+            // Create error element if it doesn't exist
+            const errorDiv = document.createElement('div');
+            errorDiv.id = elementId;
+            errorDiv.className = 'error-message';
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            
+            // Insert after the form
+            const form = document.getElementById('loginForm');
+            if (form) {
+                form.insertAdjacentElement('afterend', errorDiv);
+            }
         }
     }
 
@@ -1269,26 +1141,6 @@
             'mother': 'What is your mother\'s maiden name?'
         };
         return questions[questionKey] || questionKey;
-    }
-
-    // Setup reminder system
-    function setupReminderSystem() {
-        const users = JSON.parse(localStorage.getItem('studyTrackerUsers') || '[]');
-        
-        users.forEach(async user => {
-            if (user.reminderEnabled) {
-                const lastActivity = new Date(user.lastActivityDate || 0);
-                const now = new Date();
-                const hoursSinceActivity = (now - lastActivity) / (1000 * 60 * 60);
-                
-                if (hoursSinceActivity >= 24) {
-                    await sendSMSReminder(
-                        user.phone,
-                        "Don't forget to maintain your study streak! Log in now to continue your progress."
-                    );
-                }
-            }
-        });
     }
 
     // Export authentication functions to global scope
