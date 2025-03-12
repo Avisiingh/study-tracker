@@ -68,12 +68,16 @@ function loginUser(user) {
     userState.profilePic = user.profilePic || generateInitialsAvatar(user.username);
     userState.userId = user.userId;
     
+    // Load user's study data
+    userState.studyData = loadStudyData(user.userId);
+    
     // Save to localStorage
     const userInfo = {
         username: user.username,
         email: user.email,
         profilePic: userState.profilePic,
-        userId: user.userId
+        userId: user.userId,
+        lastLogin: new Date().toISOString()
     };
     
     localStorage.setItem('currentUser', JSON.stringify(userInfo));
@@ -92,26 +96,31 @@ function loginUser(user) {
 // Handle user login
 function handleLogin(event) {
     event.preventDefault();
-    console.log('Login form submitted');
     
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
-    console.log('Email entered:', email);
     
     if (!email || !password) {
         showError('Please fill in all fields');
         return;
     }
     
-    const users = JSON.parse(localStorage.getItem('studyTrackerUsers') || '[]');
-    console.log('Found users:', users.length);
+    let users = [];
+    try {
+        const storedUsers = localStorage.getItem('studyTrackerUsers');
+        users = storedUsers ? JSON.parse(storedUsers) : [];
+        console.log('Found users:', users.length);
+    } catch (error) {
+        console.error('Error reading users:', error);
+        showError('Error accessing user data. Please try again.');
+        return;
+    }
     
     const hashedPassword = hashPassword(password);
     const user = users.find(u => u.email === email && u.hashedPassword === hashedPassword);
-    console.log('User found:', !!user);
     
     if (user) {
-        console.log('Logging in user:', user.email);
+        console.log('Login successful:', email);
         loginUser(user);
     } else {
         showError('Invalid email or password. Please try again.');
@@ -255,6 +264,74 @@ const userState = {
     userId: ''
 };
 
+// Add this after userState declaration
+const studyDataKey = 'studyTrackerData';
+
+// Add this after studyDataKey declaration
+const defaultSubjects = {
+    'Mathematics': ['Algebra', 'Calculus', 'Statistics'],
+    'Science': ['Physics', 'Chemistry', 'Biology'],
+    'Programming': ['JavaScript', 'Python', 'Java'],
+    'Languages': ['English', 'Spanish', 'French']
+};
+
+// Add these new functions for handling study data
+function saveStudyData(userId, data) {
+    try {
+        let allStudyData = JSON.parse(localStorage.getItem(studyDataKey) || '{}');
+        allStudyData[userId] = {
+            ...allStudyData[userId],
+            ...data,
+            lastUpdated: new Date().toISOString()
+        };
+        localStorage.setItem(studyDataKey, JSON.stringify(allStudyData));
+        console.log('Study data saved for user:', userId);
+    } catch (error) {
+        console.error('Error saving study data:', error);
+    }
+}
+
+function loadStudyData(userId) {
+    try {
+        const allStudyData = JSON.parse(localStorage.getItem(studyDataKey) || '{}');
+        return allStudyData[userId] || {
+            subjects: defaultSubjects,
+            concepts: {
+                'Data Structures': { progress: 75, level: 'Advanced' },
+                'Algorithm Analysis': { progress: 60, level: 'Intermediate' },
+                'System Design': { progress: 45, level: 'Beginner' }
+            },
+            goals: [
+                {
+                    id: 'goal1',
+                    title: 'Complete Practice Problems',
+                    description: 'Solve 5 algorithm challenges',
+                    target: 5,
+                    current: 0,
+                    completed: false
+                },
+                {
+                    id: 'goal2',
+                    title: 'Study Session Target',
+                    description: '4 hours of focused learning',
+                    target: 4,
+                    current: 0,
+                    completed: false
+                }
+            ],
+            stats: {
+                conceptsMastered: 0,
+                studyHours: 0,
+                successRate: 0
+            },
+            activities: []
+        };
+    } catch (error) {
+        console.error('Error loading study data:', error);
+        return null;
+    }
+}
+
 // Initialize authentication
 function initAuth() {
     const savedUser = localStorage.getItem('currentUser');
@@ -303,7 +380,15 @@ function handleRegister(event) {
         return;
     }
     
-    const users = JSON.parse(localStorage.getItem('studyTrackerUsers') || '[]');
+    // Get existing users or initialize empty array
+    let users = [];
+    try {
+        const storedUsers = localStorage.getItem('studyTrackerUsers');
+        users = storedUsers ? JSON.parse(storedUsers) : [];
+    } catch (error) {
+        console.error('Error reading users:', error);
+        users = [];
+    }
     
     if (users.some(u => u.email === email)) {
         showError('Email already registered', 'register-error');
@@ -325,547 +410,567 @@ function handleRegister(event) {
         createdAt: new Date().toISOString()
     };
     
+    // Add new user and save to localStorage
     users.push(newUser);
-    localStorage.setItem('studyTrackerUsers', JSON.stringify(users));
-    
-    // Auto login after registration
-    loginUser(newUser);
-    
-    // Close registration modal
-    const registerModal = document.getElementById('registerModal');
-    if (registerModal) {
-        registerModal.style.display = 'none';
+    try {
+        localStorage.setItem('studyTrackerUsers', JSON.stringify(users));
+        console.log('User registered successfully:', email);
+        
+        // Also save as current user
+        const userInfo = {
+            username: newUser.username,
+            email: newUser.email,
+            profilePic: newUser.profilePic,
+            userId: newUser.userId
+        };
+        localStorage.setItem('currentUser', JSON.stringify(userInfo));
+        
+        // Auto login
+        loginUser(newUser);
+        
+        // Close registration modal
+        const registerModal = document.getElementById('registerModal');
+        if (registerModal) {
+            registerModal.style.display = 'none';
+        }
+    } catch (error) {
+        console.error('Error saving user:', error);
+        showError('Error creating account. Please try again.', 'register-error');
     }
 }
 
 // Handle logout
 function handleLogout() {
+    // Save current study data before logging out
+    if (userState.isLoggedIn && userState.userId) {
+        saveStudyData(userState.userId, userState.studyData);
+    }
+    
     localStorage.removeItem('currentUser');
     userState.isLoggedIn = false;
     userState.username = '';
     userState.email = '';
     userState.profilePic = '';
     userState.userId = '';
+    userState.studyData = null;
     
     redirectToLogin();
 }
 
-// Password recovery
+// Handle password recovery
 function handlePasswordRecovery(event) {
     event.preventDefault();
-    console.log('Starting password recovery process');
-    
     const email = document.getElementById('recovery-email').value;
-    console.log('Recovery email:', email);
+    const securityQuestionContainer = document.getElementById('security-question-container');
+    const securityQuestionText = document.getElementById('security-question-text');
+    const recoverySubmitBtn = document.getElementById('recovery-submit');
+    
+    if (!email) {
+        showError('Please enter your email address', 'recovery-error');
+        return;
+    }
     
     const users = JSON.parse(localStorage.getItem('studyTrackerUsers') || '[]');
     const user = users.find(u => u.email === email);
     
     if (!user) {
-        showError('Email not found', 'recovery-error');
+        showError('No account found with this email', 'recovery-error');
         return;
     }
     
-    const securityQuestionContainer = document.getElementById('security-question-container');
-    const securityQuestionText = document.getElementById('security-question-text');
-    const recoveryForm = document.getElementById('recoveryForm');
-    const recoverySubmitBtn = document.getElementById('recovery-submit');
-    
-    if (!securityQuestionContainer || !securityQuestionText || !recoveryForm) {
-        console.error('Required recovery elements not found');
-        return;
-    }
-    
-    // Show security question
-    securityQuestionText.textContent = user.securityQuestion;
-    securityQuestionContainer.style.display = 'block';
-    
-    // Update submit button text
-    if (recoverySubmitBtn) {
+    if (securityQuestionContainer.style.display === 'none') {
+        // Show security question
+        securityQuestionText.textContent = user.securityQuestion;
+        securityQuestionContainer.style.display = 'block';
         recoverySubmitBtn.textContent = 'Reset Password';
+        return;
     }
     
-    // Handle the actual password reset
-    recoveryForm.onsubmit = function(e) {
-        e.preventDefault();
-        console.log('Processing password reset submission');
-        
-        const answer = document.getElementById('security-answer').value;
-        const newPassword = document.getElementById('new-password').value;
-        const confirmNewPassword = document.getElementById('confirm-new-password').value;
-        
-        if (!answer || !newPassword || !confirmNewPassword) {
-            showError('Please fill in all fields', 'recovery-error');
-            return;
-        }
-        
-        if (hashPassword(answer.toLowerCase()) !== user.securityAnswer) {
-            showError('Incorrect security answer', 'recovery-error');
-            return;
-        }
-        
-        if (newPassword !== confirmNewPassword) {
-            showError('Passwords do not match', 'recovery-error');
-            return;
-        }
-        
-        if (newPassword.length < 6) {
-            showError('Password must be at least 6 characters long', 'recovery-error');
-            return;
-        }
-        
-        // Update password
-        const updatedUsers = users.map(u => {
-            if (u.email === email) {
-                return { ...u, hashedPassword: hashPassword(newPassword) };
-            }
-            return u;
-        });
-        
-        try {
-            localStorage.setItem('studyTrackerUsers', JSON.stringify(updatedUsers));
-            console.log('Password updated successfully');
-            
-            // Close recovery modal
-            const recoveryModal = document.getElementById('recoveryModal');
-            if (recoveryModal) {
-                recoveryModal.style.display = 'none';
-            }
-            
-            // Reset form
-            recoveryForm.reset();
-            securityQuestionContainer.style.display = 'none';
-            
-            // Show success message and auto-login
-            alert('Password updated successfully! Please log in with your new password.');
-            
-            // Clear any existing error messages
-            const errorElement = document.getElementById('recovery-error');
-            if (errorElement) {
-                errorElement.style.display = 'none';
-            }
-            
-            // Redirect to login page
-            setTimeout(() => {
-                window.location.reload();
-            }, 1000);
-            
-        } catch (error) {
-            console.error('Error updating password:', error);
-            showError('An error occurred while updating your password', 'recovery-error');
-        }
-    };
+    // Handle password reset
+    const answer = document.getElementById('security-answer').value;
+    const newPassword = document.getElementById('new-password').value;
+    const confirmPassword = document.getElementById('confirm-new-password').value;
+    
+    if (!answer || !newPassword || !confirmPassword) {
+        showError('Please fill in all fields', 'recovery-error');
+        return;
+    }
+    
+    if (newPassword !== confirmPassword) {
+        showError('Passwords do not match', 'recovery-error');
+        return;
+    }
+    
+    if (hashPassword(answer.toLowerCase()) !== user.securityAnswer) {
+        showError('Incorrect security answer', 'recovery-error');
+        return;
+    }
+    
+    // Update password
+    const updatedUsers = users.map(u => 
+        u.email === email ? {...u, hashedPassword: hashPassword(newPassword)} : u
+    );
+    
+    localStorage.setItem('studyTrackerUsers', JSON.stringify(updatedUsers));
+    
+    // Show success and redirect
+    const recoveryModal = document.getElementById('recoveryModal');
+    recoveryModal.style.display = 'none';
+    alert('Password updated successfully! Please log in with your new password.');
+    document.getElementById('recoveryForm').reset();
+    securityQuestionContainer.style.display = 'none';
+    recoverySubmitBtn.textContent = 'Continue';
 }
 
 // Update UI based on authentication state
 function updateAuthUI() {
     console.log('Updating UI with user state:', userState);
     
-    // First, ensure we have a header
-    let header = document.querySelector('header');
-    if (!header) {
-        header = document.createElement('header');
-        header.className = 'app-header';
-        document.body.insertBefore(header, document.body.firstChild);
-        
-        // Create app title
-        const appTitle = document.createElement('div');
-        appTitle.className = 'app-title';
-        appTitle.innerHTML = '<i class="fas fa-book"></i> Study Tracker';
-        header.appendChild(appTitle);
-        
-        // Create navigation
-        const nav = document.createElement('nav');
-        nav.className = 'main-nav';
-        nav.innerHTML = `
-            <a href="#" class="nav-item active" data-page="dashboard">
-                <i class="fas fa-home"></i> Dashboard
-            </a>
-            <a href="#" class="nav-item" data-page="subjects">
-                <i class="fas fa-book-open"></i> Subjects
-            </a>
-            <a href="#" class="nav-item" data-page="progress">
-                <i class="fas fa-chart-line"></i> Progress
-            </a>
-        `;
-        header.appendChild(nav);
-        
-        // Create header right section
-        const headerRight = document.createElement('div');
-        headerRight.className = 'header-right';
-        header.appendChild(headerRight);
-    }
-    
-    // Ensure we have a header-right section
-    let headerRight = header.querySelector('.header-right');
-    if (!headerRight) {
-        headerRight = document.createElement('div');
-        headerRight.className = 'header-right';
-        header.appendChild(headerRight);
-    }
-    
-    // Create or update main content area
-    let mainContent = document.querySelector('.main-content');
-    if (!mainContent) {
-        mainContent = document.createElement('div');
-        mainContent.className = 'main-content';
-        document.body.appendChild(mainContent);
-    }
-    
-    const loginElements = document.querySelectorAll('.login-box, .signup-box, .app-download');
-    let userProfileContainer = document.querySelector('.user-profile-container');
-    
-    if (!userProfileContainer) {
-        userProfileContainer = createUserProfileContainer();
-        headerRight.appendChild(userProfileContainer);
+    // Create main app container if it doesn't exist
+    let appContainer = document.querySelector('.app-container');
+    if (!appContainer) {
+        appContainer = document.createElement('div');
+        appContainer.className = 'app-container';
+        document.body.appendChild(appContainer);
     }
     
     if (userState.isLoggedIn) {
-        // Hide login-related elements
-        loginElements.forEach(el => el.style.display = 'none');
+        // Update app container with new layout
+        appContainer.innerHTML = `
+            <div class="sidebar">
+                <div class="user-profile">
+                    <div class="user-avatar large">${userState.profilePic || generateInitialsAvatar(userState.username)}</div>
+                    <div class="user-info">
+                        <h3>${userState.username}</h3>
+                        <p>${userState.email}</p>
+                    </div>
+                    <div class="user-actions">
+                        <button onclick="showSettings()" class="btn-icon"><i class="fas fa-cog"></i></button>
+                        <button onclick="handleLogout()" class="btn-icon"><i class="fas fa-sign-out-alt"></i></button>
+                    </div>
+                </div>
+                <nav class="sidebar-nav">
+                    <a href="#dashboard" class="nav-item active">
+                        <i class="fas fa-home"></i> Dashboard
+                    </a>
+                    <a href="#subjects" class="nav-item">
+                        <i class="fas fa-book"></i> Subjects
+                    </a>
+                    <a href="#progress" class="nav-item">
+                        <i class="fas fa-chart-line"></i> Progress
+                    </a>
+                    <a href="#goals" class="nav-item">
+                        <i class="fas fa-bullseye"></i> Goals
+                    </a>
+                </nav>
+            </div>
+            <div class="main-area">
+                <div class="top-bar">
+                    <div class="search-bar">
+                        <i class="fas fa-search"></i>
+                        <input type="text" placeholder="Search subjects, topics, or concepts...">
+                    </div>
+                    <div class="quick-actions">
+                        <button onclick="startStudySession()" class="btn primary">
+                            <i class="fas fa-play"></i> Start Study Session
+                        </button>
+                        <button onclick="addNewSubject()" class="btn">
+                            <i class="fas fa-plus"></i> Add Subject
+                        </button>
+                    </div>
+                </div>
+                <div class="main-content">
+                    <div class="dashboard-header">
+                        <h2>Welcome back, ${userState.username}! 📚</h2>
+                        <p>Here's your learning progress</p>
+                    </div>
+                    
+                    <div class="subjects-grid">
+                        ${Object.entries(userState.studyData.subjects || {}).map(([subject, data]) => `
+                            <div class="subject-card">
+                                <div class="subject-icon">
+                                    <i class="fas fa-book"></i>
+                                </div>
+                                <div class="subject-info">
+                                    <h3>${subject}</h3>
+                                    <p>${(data.topics || []).length} Topics</p>
+                                    <div class="progress-bar">
+                                        <div class="progress-bar-fill" style="width: ${data.progress || 0}%"></div>
+                                    </div>
+                                </div>
+                                <button onclick="viewSubject('${subject}')" class="btn-icon">
+                                    <i class="fas fa-chevron-right"></i>
+                                </button>
+                            </div>
+                        `).join('')}
+                    </div>
+                    
+                    <div class="dashboard-grid">
+                        <div class="stats-card">
+                            <h3><i class="fas fa-chart-pie"></i> Learning Overview</h3>
+                            <div class="stats-grid">
+                                <div class="stat-item">
+                                    <span class="stat-value">${Object.keys(userState.studyData.subjects || {}).length}</span>
+                                    <span class="stat-label">Active Subjects</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-value">${userState.studyData.stats.studyHours || 0}</span>
+                                    <span class="stat-label">Study Hours</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-value">${userState.studyData.stats.successRate || 0}%</span>
+                                    <span class="stat-label">Success Rate</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="recent-activity">
+                            <h3><i class="fas fa-history"></i> Recent Activity</h3>
+                            <div class="activity-timeline">
+                                ${(userState.studyData.activities || []).map(activity => `
+                                    <div class="activity-item">
+                                        <div class="activity-icon ${activity.type}">
+                                            <i class="fas fa-${activity.type === 'completed' ? 'check' : 'star'}"></i>
+                                        </div>
+                                        <div class="activity-content">
+                                            <h4>${activity.title}</h4>
+                                            <p>${activity.description}</p>
+                                            <span class="activity-time">${new Date(activity.timestamp).toLocaleString()}</span>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
         
-        // Show and update user profile
-        userProfileContainer.style.display = 'flex';
-        const userAvatar = userProfileContainer.querySelector('.user-avatar');
-        const userName = userProfileContainer.querySelector('.user-name');
-        
-        if (userAvatar) {
-            userAvatar.textContent = userState.profilePic || generateInitialsAvatar(userState.username);
-        }
-        if (userName) {
-            userName.textContent = userState.username;
-        }
-        
-        // Add styles
-        const styles = document.createElement('style');
-        styles.textContent = `
-            :root {
-                --primary-color: #2196F3;
-                --primary-dark: #1976D2;
-                --secondary-color: #FFC107;
-                --success-color: #4CAF50;
-                --danger-color: #F44336;
-                --text-primary: #333333;
-                --text-secondary: #666666;
-                --background-color: #F5F7FA;
-                --card-background: #FFFFFF;
-                --border-color: #E0E0E0;
-                --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
-                --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
-                --radius-sm: 4px;
-                --radius-md: 8px;
-                --spacing-xs: 0.5rem;
-                --spacing-sm: 1rem;
-                --spacing-md: 1.5rem;
-                --spacing-lg: 2rem;
-            }
-
-            body {
-                background-color: var(--background-color);
-                color: var(--text-primary);
-                font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-                margin: 0;
-                padding: 0;
+        // Add new styles
+        const newStyles = document.createElement('style');
+        newStyles.textContent = `
+            .app-container {
+                display: flex;
                 min-height: 100vh;
+                background: var(--background-color);
             }
             
-            .app-header {
+            .sidebar {
+                width: 280px;
                 background: var(--card-background);
-                padding: 0 var(--spacing-lg);
+                border-right: 1px solid var(--border-color);
+                padding: var(--spacing-md);
                 display: flex;
-                align-items: center;
-                gap: var(--spacing-md);
-                height: 64px;
-                box-shadow: var(--shadow-sm);
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                z-index: 1000;
+                flex-direction: column;
+                gap: var(--spacing-lg);
             }
             
-            .app-title {
-                font-size: 1.25rem;
-                font-weight: 600;
-                color: var(--primary-color);
-                display: flex;
-                align-items: center;
-                gap: var(--spacing-xs);
-                min-width: 200px;
-            }
-            
-            .main-nav {
-                display: flex;
-                gap: var(--spacing-sm);
-                flex: 1;
-            }
-            
-            .nav-item {
-                color: var(--text-secondary);
-                text-decoration: none;
-                padding: var(--spacing-xs) var(--spacing-sm);
-                border-radius: var(--radius-sm);
-                display: flex;
-                align-items: center;
-                gap: 8px;
-                font-weight: 500;
-                transition: all 0.2s;
-            }
-            
-            .nav-item:hover {
-                color: var(--primary-color);
-                background: rgba(33, 150, 243, 0.05);
-            }
-            
-            .nav-item.active {
-                color: var(--primary-color);
-                background: rgba(33, 150, 243, 0.1);
-            }
-            
-            .user-profile-container {
-                position: relative;
-                display: flex;
-                align-items: center;
-                gap: var(--spacing-sm);
-                padding: var(--spacing-xs) var(--spacing-sm);
+            .user-profile {
+                padding: var(--spacing-md);
+                background: var(--background-color);
                 border-radius: var(--radius-md);
-                cursor: pointer;
-                transition: all 0.2s;
+                text-align: center;
             }
             
-            .user-profile-container:hover {
-                background: rgba(0, 0, 0, 0.05);
+            .user-avatar.large {
+                width: 80px;
+                height: 80px;
+                font-size: 1.5rem;
+                margin: 0 auto var(--spacing-sm);
             }
             
-            .user-avatar {
+            .user-info h3 {
+                margin: 0;
+                color: var(--text-primary);
+                font-size: 1.2rem;
+            }
+            
+            .user-info p {
+                margin: var(--spacing-xs) 0;
+                color: var(--text-secondary);
+                font-size: 0.9rem;
+            }
+            
+            .user-actions {
+                display: flex;
+                justify-content: center;
+                gap: var(--spacing-sm);
+                margin-top: var(--spacing-sm);
+            }
+            
+            .btn-icon {
                 width: 36px;
                 height: 36px;
-                background: var(--primary-color);
-                color: white;
                 border-radius: 50%;
+                border: none;
+                background: var(--background-color);
+                color: var(--text-secondary);
+                cursor: pointer;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                font-weight: 600;
-                font-size: 0.875rem;
+                transition: all 0.2s;
             }
             
-            .user-name {
-                font-weight: 500;
-                color: var(--text-primary);
+            .btn-icon:hover {
+                background: var(--primary-color);
+                color: white;
             }
             
-            .main-content {
-                margin-top: 80px;
-                padding: var(--spacing-lg);
-                max-width: 1200px;
-                margin-left: auto;
-                margin-right: auto;
-            }
-            
-            .dashboard-grid {
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-                gap: var(--spacing-md);
-                margin-bottom: var(--spacing-lg);
-            }
-            
-            .dashboard-card {
-                background: var(--card-background);
-                border-radius: var(--radius-md);
-                padding: var(--spacing-md);
-                box-shadow: var(--shadow-sm);
-            }
-            
-            .dashboard-card h3 {
-                margin: 0 0 var(--spacing-sm);
-                color: var(--text-primary);
-                font-size: 1.125rem;
+            .sidebar-nav {
                 display: flex;
-                align-items: center;
+                flex-direction: column;
                 gap: var(--spacing-xs);
             }
             
-            .progress-bar {
-                height: 8px;
-                background: var(--border-color);
-                border-radius: 4px;
-                margin-top: var(--spacing-xs);
+            .sidebar-nav .nav-item {
+                padding: var(--spacing-sm) var(--spacing-md);
+                border-radius: var(--radius-sm);
+                color: var(--text-secondary);
+                text-decoration: none;
+                display: flex;
+                align-items: center;
+                gap: var(--spacing-sm);
+                transition: all 0.2s;
             }
             
-            .progress-bar-fill {
-                height: 100%;
+            .sidebar-nav .nav-item:hover,
+            .sidebar-nav .nav-item.active {
                 background: var(--primary-color);
-                border-radius: 4px;
-                transition: width 0.3s ease;
+                color: white;
+            }
+            
+            .main-area {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                overflow-y: auto;
+            }
+            
+            .top-bar {
+                height: 64px;
+                background: var(--card-background);
+                border-bottom: 1px solid var(--border-color);
+                padding: 0 var(--spacing-lg);
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: var(--spacing-md);
+            }
+            
+            .search-bar {
+                flex: 1;
+                max-width: 600px;
+                position: relative;
+            }
+            
+            .search-bar input {
+                width: 100%;
+                padding: var(--spacing-sm) var(--spacing-sm) var(--spacing-sm) 40px;
+                border: 1px solid var(--border-color);
+                border-radius: var(--radius-md);
+                font-size: 1rem;
+                background: var(--background-color);
+            }
+            
+            .search-bar i {
+                position: absolute;
+                left: var(--spacing-sm);
+                top: 50%;
+                transform: translateY(-50%);
+                color: var(--text-secondary);
+            }
+            
+            .quick-actions {
+                display: flex;
+                gap: var(--spacing-sm);
+            }
+            
+            .btn {
+                padding: var(--spacing-sm) var(--spacing-md);
+                border: 1px solid var(--border-color);
+                border-radius: var(--radius-sm);
+                background: var(--card-background);
+                color: var(--text-primary);
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                gap: var(--spacing-xs);
+                transition: all 0.2s;
+            }
+            
+            .btn.primary {
+                background: var(--primary-color);
+                color: white;
+                border-color: var(--primary-color);
+            }
+            
+            .btn:hover {
+                background: var(--primary-color);
+                color: white;
+                border-color: var(--primary-color);
+            }
+            
+            .subjects-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+                gap: var(--spacing-md);
+                margin: var(--spacing-lg) 0;
+            }
+            
+            .subject-card {
+                background: var(--card-background);
+                border-radius: var(--radius-md);
+                padding: var(--spacing-md);
+                display: flex;
+                align-items: center;
+                gap: var(--spacing-md);
+                transition: all 0.2s;
+                cursor: pointer;
+            }
+            
+            .subject-card:hover {
+                transform: translateY(-2px);
+                box-shadow: var(--shadow-md);
+            }
+            
+            .subject-icon {
+                width: 48px;
+                height: 48px;
+                background: var(--primary-color);
+                border-radius: var(--radius-sm);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: white;
+                font-size: 1.2rem;
+            }
+            
+            .subject-info {
+                flex: 1;
+            }
+            
+            .subject-info h3 {
+                margin: 0;
+                color: var(--text-primary);
+                font-size: 1.1rem;
+            }
+            
+            .subject-info p {
+                margin: var(--spacing-xs) 0;
+                color: var(--text-secondary);
+                font-size: 0.9rem;
             }
             
             @media (max-width: 768px) {
-                .app-header {
-                    padding: 0 var(--spacing-sm);
+                .sidebar {
+                    position: fixed;
+                    left: -280px;
+                    top: 0;
+                    bottom: 0;
+                    z-index: 1000;
+                    transition: all 0.3s;
                 }
                 
-                .app-title {
-                    min-width: auto;
+                .sidebar.active {
+                    left: 0;
                 }
                 
-                .main-nav {
-                    display: none;
-                }
-                
-                .main-content {
+                .top-bar {
+                    flex-direction: column;
+                    height: auto;
                     padding: var(--spacing-sm);
+                    gap: var(--spacing-sm);
+                }
+                
+                .search-bar {
+                    width: 100%;
+                }
+                
+                .quick-actions {
+                    width: 100%;
+                    flex-direction: column;
+                }
+                
+                .btn {
+                    width: 100%;
+                    justify-content: center;
                 }
             }
         `;
         
-        if (!document.querySelector('style[data-app-styles]')) {
-            styles.setAttribute('data-app-styles', '');
-            document.head.appendChild(styles);
+        if (!document.querySelector('style[data-new-styles]')) {
+            newStyles.setAttribute('data-new-styles', '');
+            document.head.appendChild(newStyles);
         }
-        
-        // Show dashboard content
-        mainContent.innerHTML = `
-            <div class="dashboard-header">
-                <h2>Welcome back, ${userState.username}! 👋</h2>
-                <p>Here's your study progress overview</p>
-            </div>
-            
-            <div class="dashboard-grid">
-                <div class="dashboard-card">
-                    <h3><i class="fas fa-clock"></i> Today's Study Time</h3>
-                    <div class="stat-value">2.5 hours</div>
-                    <div class="progress-bar">
-                        <div class="progress-bar-fill" style="width: 60%;"></div>
-                    </div>
-                </div>
-                
-                <div class="dashboard-card">
-                    <h3><i class="fas fa-tasks"></i> Tasks Completed</h3>
-                    <div class="stat-value">8/12</div>
-                    <div class="progress-bar">
-                        <div class="progress-bar-fill" style="width: 75%;"></div>
-                    </div>
-                </div>
-                
-                <div class="dashboard-card">
-                    <h3><i class="fas fa-star"></i> Current Streak</h3>
-                    <div class="stat-value">5 days</div>
-                    <div class="progress-bar">
-                        <div class="progress-bar-fill" style="width: 50%;"></div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="dashboard-card">
-                <h3><i class="fas fa-calendar"></i> Recent Activity</h3>
-                <div class="activity-list">
-                    <div class="activity-item">
-                        <i class="fas fa-book text-primary"></i>
-                        <span>Completed Mathematics Chapter 5</span>
-                        <span class="activity-time">2 hours ago</span>
-                    </div>
-                    <div class="activity-item">
-                        <i class="fas fa-file-alt text-success"></i>
-                        <span>Submitted Physics Assignment</span>
-                        <span class="activity-time">Yesterday</span>
-                    </div>
-                    <div class="activity-item">
-                        <i class="fas fa-trophy text-warning"></i>
-                        <span>Achieved 3-day study streak</span>
-                        <span class="activity-time">2 days ago</span>
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        // Add event listeners for navigation
-        document.querySelectorAll('.nav-item').forEach(item => {
-            item.addEventListener('click', (e) => {
-                e.preventDefault();
-                document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
-                item.classList.add('active');
-                // Handle page navigation here
-            });
-        });
-        
     } else {
-        // Show login-related elements
-        loginElements.forEach(el => el.style.display = 'block');
-        
-        // Hide user profile
-        if (userProfileContainer) {
-            userProfileContainer.style.display = 'none';
-        }
-        
-        // Clear main content
-        mainContent.innerHTML = '';
+        appContainer.innerHTML = ''; // Clear for login view
     }
 }
 
-// Create user profile container
-function createUserProfileContainer() {
-    const container = document.createElement('div');
-    container.className = 'user-profile-container';
+// Add new subject dialog
+function addNewSubject() {
+    const subjectName = prompt('Enter subject name:');
+    if (subjectName) {
+        const topics = prompt('Enter topics (comma-separated):');
+        const topicsList = topics ? topics.split(',').map(t => t.trim()) : [];
+        addSubject(subjectName, topicsList);
+    }
+}
+
+// View subject details
+function viewSubject(subjectName) {
+    const subject = userState.studyData.subjects[subjectName];
+    if (!subject) return;
     
-    const profile = document.createElement('div');
-    profile.className = 'user-profile';
-    
-    const avatar = document.createElement('div');
-    avatar.className = 'user-avatar';
-    avatar.textContent = userState.profilePic || generateInitialsAvatar(userState.username);
-    
-    const info = document.createElement('div');
-    info.className = 'user-info';
-    
-    const name = document.createElement('div');
-    name.className = 'user-name';
-    name.textContent = userState.username;
-    
-    const dropdown = document.createElement('div');
-    dropdown.className = 'user-dropdown';
-    dropdown.innerHTML = `
-        <div class="dropdown-item" onclick="showProfile()">
-            <i class="fas fa-user"></i>
-            <span>Profile</span>
+    const mainContent = document.querySelector('.main-content');
+    mainContent.innerHTML = `
+        <div class="subject-header">
+            <h2>${subjectName}</h2>
+            <div class="subject-actions">
+                <button onclick="editSubject('${subjectName}')" class="btn">
+                    <i class="fas fa-edit"></i> Edit
+                </button>
+                <button onclick="startSubjectStudy('${subjectName}')" class="btn primary">
+                    <i class="fas fa-play"></i> Start Studying
+                </button>
+            </div>
         </div>
-        <div class="dropdown-item" onclick="showSettings()">
-            <i class="fas fa-cog"></i>
-            <span>Settings</span>
-        </div>
-        <div class="dropdown-item" onclick="showAdminPanel()">
-            <i class="fas fa-shield-alt"></i>
-            <span>Admin Panel</span>
-        </div>
-        <div class="dropdown-divider"></div>
-        <div class="dropdown-item" onclick="handleLogout()">
-            <i class="fas fa-sign-out-alt"></i>
-            <span>Logout</span>
+        
+        <div class="topics-list">
+            ${(subject.topics || []).map(topic => `
+                <div class="topic-item">
+                    <div class="topic-info">
+                        <h4>${topic}</h4>
+                        <div class="progress-bar">
+                            <div class="progress-bar-fill" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <button onclick="startTopicStudy('${subjectName}', '${topic}')" class="btn-icon">
+                        <i class="fas fa-play"></i>
+                    </button>
+                </div>
+            `).join('')}
         </div>
     `;
+}
+
+// Add function to manage subjects
+function addSubject(name, topics = []) {
+    if (!userState.isLoggedIn || !userState.studyData) return;
     
-    info.appendChild(name);
-    profile.appendChild(avatar);
-    profile.appendChild(info);
-    container.appendChild(profile);
-    container.appendChild(dropdown);
+    if (!userState.studyData.subjects) {
+        userState.studyData.subjects = {};
+    }
     
-    // Toggle dropdown on click
-    const toggleDropdown = () => {
-        dropdown.classList.toggle('active');
+    userState.studyData.subjects[name] = {
+        topics,
+        progress: 0,
+        lastStudied: new Date().toISOString()
     };
     
-    avatar.addEventListener('click', toggleDropdown);
-    info.addEventListener('click', toggleDropdown);
-    
-    // Close dropdown when clicking outside
-    document.addEventListener('click', (e) => {
-        if (!container.contains(e.target)) {
-            dropdown.classList.remove('active');
-        }
-    });
-    
-    return container;
+    saveStudyData(userState.userId, userState.studyData);
+    updateAuthUI();
 }
 
 // Show admin panel
@@ -1292,4 +1397,60 @@ function deleteUser(userId) {
         localStorage.setItem('studyTrackerUsers', JSON.stringify(updatedUsers));
         showAdminPanel(); // Refresh the admin panel
     }
+}
+
+// Add function to update study progress
+function updateStudyProgress(conceptName, progress) {
+    if (!userState.isLoggedIn || !userState.studyData) return;
+    
+    userState.studyData.concepts[conceptName].progress = progress;
+    if (progress >= 75) {
+        userState.studyData.concepts[conceptName].level = 'Advanced';
+    } else if (progress >= 50) {
+        userState.studyData.concepts[conceptName].level = 'Intermediate';
+    } else {
+        userState.studyData.concepts[conceptName].level = 'Beginner';
+    }
+    
+    // Save progress
+    saveStudyData(userState.userId, userState.studyData);
+    
+    // Update UI
+    updateAuthUI();
+}
+
+// Add function to update study goals
+function updateStudyGoal(goalId, progress) {
+    if (!userState.isLoggedIn || !userState.studyData) return;
+    
+    const goal = userState.studyData.goals.find(g => g.id === goalId);
+    if (goal) {
+        goal.current = progress;
+        goal.completed = progress >= goal.target;
+        
+        // Save progress
+        saveStudyData(userState.userId, userState.studyData);
+        
+        // Update UI
+        updateAuthUI();
+    }
+}
+
+// Add function to log study activity
+function logStudyActivity(activity) {
+    if (!userState.isLoggedIn || !userState.studyData) return;
+    
+    userState.studyData.activities.unshift({
+        ...activity,
+        timestamp: new Date().toISOString()
+    });
+    
+    // Keep only last 10 activities
+    userState.studyData.activities = userState.studyData.activities.slice(0, 10);
+    
+    // Save activity
+    saveStudyData(userState.userId, userState.studyData);
+    
+    // Update UI
+    updateAuthUI();
 }

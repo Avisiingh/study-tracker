@@ -212,6 +212,8 @@
             backdrop-filter: blur(4px);
             z-index: 1000;
             animation: fadeIn 0.3s ease;
+            overflow-y: auto;
+            padding: 1rem;
         }
 
         .modal-content {
@@ -224,6 +226,8 @@
             margin: 2rem auto;
             box-shadow: var(--shadow-lg);
             animation: slideIn 0.3s ease;
+            max-height: calc(100vh - 4rem);
+            overflow-y: auto;
         }
 
         .close-modal {
@@ -268,6 +272,65 @@
             .login-container {
                 padding: 1rem;
             }
+        }
+
+        .modal-subtitle {
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+            font-size: 0.95rem;
+        }
+        
+        .security-question {
+            background: var(--background-color);
+            padding: 1rem;
+            border-radius: var(--radius-md);
+            margin: 0.5rem 0;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+        
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 1rem;
+            border-radius: var(--radius-md);
+            margin: 1rem 0;
+            text-align: center;
+            font-weight: 500;
+        }
+        
+        #security-question-container {
+            animation: slideDown 0.3s ease;
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Add smooth scrollbar styling */
+        .modal-content::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .modal-content::-webkit-scrollbar-track {
+            background: var(--background-color);
+            border-radius: 4px;
+        }
+
+        .modal-content::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        .modal-content::-webkit-scrollbar-thumb:hover {
+            background: var(--text-secondary);
         }
     </style>
 </head>
@@ -376,35 +439,31 @@
         <div class="modal-content">
             <span class="close-modal">&times;</span>
             <h2>Password Recovery</h2>
-            <p>We'll help you get back into your account</p>
+            <p class="modal-subtitle">Enter your email to recover your account</p>
+            <div id="recovery-error" class="error-message"></div>
             <form id="recoveryForm">
                 <div class="form-group">
-                    <label for="recovery-email">Email</label>
-                    <input type="email" id="recovery-email" required 
-                           placeholder="Enter your email">
+                    <label for="recovery-email">Email Address</label>
+                    <input type="email" id="recovery-email" required placeholder="Enter your registered email">
                 </div>
                 <div id="security-question-container" style="display: none;">
                     <div class="form-group">
                         <label>Security Question:</label>
-                        <p id="security-question-text"></p>
+                        <p id="security-question-text" class="security-question"></p>
                     </div>
                     <div class="form-group">
                         <label for="security-answer">Answer</label>
-                        <input type="text" id="security-answer" required 
-                               placeholder="Enter your answer">
+                        <input type="text" id="security-answer" required placeholder="Enter your answer">
                     </div>
                     <div class="form-group">
                         <label for="new-password">New Password</label>
-                        <input type="password" id="new-password" required minlength="6" 
-                               placeholder="Enter new password">
+                        <input type="password" id="new-password" required minlength="6" placeholder="Minimum 6 characters">
                     </div>
                     <div class="form-group">
-                        <label for="confirm-new-password">Confirm New Password</label>
-                        <input type="password" id="confirm-new-password" required minlength="6" 
-                               placeholder="Confirm new password">
+                        <label for="confirm-new-password">Confirm Password</label>
+                        <input type="password" id="confirm-new-password" required minlength="6" placeholder="Re-enter password">
                     </div>
                 </div>
-                <div class="error-message" id="recovery-error"></div>
                 <button type="submit" id="recovery-submit" class="login-btn">
                     <i class="fas fa-key"></i> Continue
                 </button>
