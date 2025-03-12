@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - 100-Day Study Streak Tracker</title>
+    <title>Login - 100-Day Study Streak</title>
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -130,40 +130,79 @@
     </header>
 
     <main class="container">
-        <div class="auth-container">
-            <div class="auth-header">
-                <h2>Login to Your Account</h2>
-                <p>Continue your study streak journey</p>
+        <div class="login-page">
+            <div class="login-container">
+                <div class="login-header">
+                    <h1>Welcome Back!</h1>
+                    <p>Continue your study streak journey</p>
+                </div>
+                <form class="login-form" id="loginForm">
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" name="email" required placeholder="Enter your email">
+                        <i class="fas fa-envelope input-icon"></i>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" name="password" required placeholder="Enter your password">
+                        <i class="fas fa-lock input-icon"></i>
+                    </div>
+                    <div class="forgot-password">
+                        <a href="#" id="forgotPasswordLink">Forgot Password?</a>
+                    </div>
+                    <button type="submit" class="login-button">
+                        <span>Sign In</span>
+                    </button>
+                </form>
+                <div class="login-footer">
+                    <span>Don't have an account?</span>
+                    <a href="register.html">Sign up now</a>
+                </div>
+                <div class="social-login">
+                    <p>Or continue with</p>
+                    <div class="social-buttons">
+                        <button class="social-button">
+                            <i class="fab fa-google"></i>
+                        </button>
+                        <button class="social-button">
+                            <i class="fab fa-github"></i>
+                        </button>
+                        <button class="social-button">
+                            <i class="fab fa-twitter"></i>
+                        </button>
+                    </div>
+                </div>
             </div>
-            
-            <form id="login-form" class="auth-form">
-                <div class="error-message" id="login-error"></div>
-                
-                <div class="form-group">
-                    <label for="login-email">Email</label>
-                    <input type="email" id="login-email" placeholder="Enter your email" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="login-password">Password</label>
-                    <input type="password" id="login-password" placeholder="Enter your password" required>
-                </div>
-                
-                <div class="form-actions">
-                    <button type="submit" class="primary-btn">Log In</button>
-                </div>
-                
-                <div class="form-footer">
-                    <p>Don't have an account? <a href="register.html">Register</a></p>
-                </div>
-                
-                <div class="auth-links">
-                    <a href="#" id="forgot-password-link">Forgot Password?</a>
-                    <a href="register.html" class="register-link">Create Account</a>
-                </div>
-            </form>
         </div>
     </main>
+
+    <!-- Password Recovery Modal -->
+    <div class="modal" id="recoveryModal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2>Password Recovery</h2>
+            <form id="recoveryForm">
+                <div class="form-group">
+                    <label for="recoveryEmail">Email Address</label>
+                    <input type="email" id="recoveryEmail" required placeholder="Enter your email">
+                </div>
+                <div class="form-group">
+                    <label for="securityQuestion">Security Question</label>
+                    <select id="securityQuestion" required>
+                        <option value="">Select a security question</option>
+                        <option value="pet">What was your first pet's name?</option>
+                        <option value="school">What was the name of your first school?</option>
+                        <option value="city">In which city were you born?</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="securityAnswer">Answer</label>
+                    <input type="text" id="securityAnswer" required placeholder="Enter your answer">
+                </div>
+                <button type="submit" class="primary-btn">Reset Password</button>
+            </form>
+        </div>
+    </div>
 
     <footer>
         <div class="container">
