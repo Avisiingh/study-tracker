@@ -30,6 +30,17 @@ function showError(message, elementId = 'login-error') {
     if (errorElement) {
         errorElement.textContent = message;
         errorElement.style.display = 'block';
+        errorElement.style.backgroundColor = '#ffebee';
+        errorElement.style.color = '#d32f2f';
+        errorElement.style.padding = '12px';
+        errorElement.style.borderRadius = '4px';
+        errorElement.style.marginBottom = '16px';
+        errorElement.style.border = '1px solid #ef5350';
+        
+        // Clear the error after 5 seconds
+        setTimeout(() => {
+            errorElement.style.display = 'none';
+        }, 5000);
     }
 }
 
@@ -96,7 +107,12 @@ function handleLogin(event) {
         console.log('Logging in user:', user.email);
         loginUser(user);
     } else {
-        showError('Invalid email or password');
+        showError('Invalid email or password. Please try again.');
+        // Clear password field
+        const passwordField = document.getElementById('password');
+        if (passwordField) {
+            passwordField.value = '';
+        }
     }
 }
 
