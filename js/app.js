@@ -656,6 +656,19 @@ function renderFeed() {
     // Sort logs by date (newest first)
     const sortedLogs = [...appState.logs].sort((a, b) => new Date(b.date) - new Date(a.date));
     
+    // Get username for feed items
+    let username = "Student";
+    let userInitial = "S";
+    
+    // Check if we have a logged in user
+    if (window.studyTrackerAuth && typeof window.studyTrackerAuth.getCurrentUser === 'function') {
+        const currentUser = window.studyTrackerAuth.getCurrentUser();
+        if (currentUser && currentUser.isLoggedIn) {
+            username = currentUser.username;
+            userInitial = currentUser.profilePic || username.charAt(0).toUpperCase();
+        }
+    }
+    
     // Create feed items for each log
     sortedLogs.forEach((log, index) => {
         const feedItem = document.createElement('div');
@@ -690,12 +703,10 @@ function renderFeed() {
         const feedUser = document.createElement('div');
         feedUser.className = 'feed-user';
         
-        const initial = 'S'; // Initial for "Student"
-        
         feedUser.innerHTML = `
-            <div class="feed-avatar">${initial}</div>
+            <div class="feed-avatar">${userInitial}</div>
             <div class="feed-user-info">
-                <div class="feed-name">Student</div>
+                <div class="feed-name">${username}</div>
                 <div class="feed-date">${formattedDate}</div>
             </div>
         `;
