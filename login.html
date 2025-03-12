@@ -2,302 +2,235 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - 100-Day Study Streak</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Login - Study Streak Tracker</title>
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: 'Inter', sans-serif;
-            background-color: #f5f8fa;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+        .login-page {
             min-height: 100vh;
-            color: #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--background-color);
         }
         
         .login-container {
-            background-color: white;
-            border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            background: var(--card-background);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             width: 100%;
             max-width: 400px;
-            padding: 40px;
+            margin: 1rem;
         }
         
-        .login-container h1 {
+        .login-header {
             text-align: center;
-            margin-bottom: 30px;
-            color: #1a73e8;
+            margin-bottom: 2rem;
+        }
+        
+        .login-header h1 {
+            color: var(--text-primary);
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
         }
         
         .form-group {
-            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
         }
         
         .form-group label {
-            display: block;
-            margin-bottom: 8px;
+            color: var(--text-primary);
             font-weight: 500;
         }
         
         .form-group input {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
             border-radius: 6px;
-            font-size: 16px;
-            box-sizing: border-box;
+            font-size: 1rem;
+            background: var(--input-background);
+            color: var(--text-primary);
         }
         
-        .primary-btn {
-            background-color: #1a73e8;
+        .login-btn {
+            background: var(--primary-color);
             color: white;
+            padding: 0.75rem;
             border: none;
             border-radius: 6px;
-            padding: 12px 24px;
-            font-size: 16px;
+            font-size: 1rem;
             font-weight: 500;
             cursor: pointer;
-            width: 100%;
             transition: background-color 0.2s;
         }
         
-        .primary-btn:hover {
-            background-color: #1557b0;
+        .login-btn:hover {
+            background: var(--primary-color-dark);
+        }
+        
+        .login-footer {
+            margin-top: 1.5rem;
+            text-align: center;
+            color: var(--text-secondary);
+        }
+        
+        .login-footer a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
         }
         
         .error-message {
-            color: #d93025;
-            font-size: 14px;
-            margin-top: 5px;
+            color: var(--error-color);
+            background: var(--error-background);
+            padding: 0.75rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
             display: none;
         }
         
-        .login-link {
-            text-align: center;
-            margin-top: 20px;
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
         }
         
-        .auth-links {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 20px;
-            font-size: 14px;
+        .modal-content {
+            background: var(--card-background);
+            padding: 2rem;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+            position: relative;
         }
         
-        .auth-links a {
-            color: #1a73e8;
-            text-decoration: none;
-        }
-        
-        .auth-links a:hover {
-            text-decoration: underline;
-        }
-        
-        /* Success message */
-        .success-message {
-            text-align: center;
-            padding: 20px;
-        }
-        
-        .success-message i {
-            color: #34a853;
-            font-size: 48px;
-            margin-bottom: 15px;
+        .close-modal {
+            position: absolute;
+            right: 1rem;
+            top: 1rem;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-secondary);
         }
     </style>
 </head>
 <body class="light-mode">
-    <div class="login-wrapper">
+    <div class="login-page">
         <div class="login-container">
-            <div class="login-box">
-                <div class="login-header">
-                    <div class="app-logo">
-                        <i class="fas fa-book-reader"></i>
-                        <h1>Study Streak</h1>
-                    </div>
-                    <p class="welcome-text">Track your 100-day study journey</p>
-                </div>
-
-                <form id="loginForm" class="login-form" onsubmit="return false;">
-                    <div class="form-group">
-                        <div class="input-with-icon">
-                            <input type="email" id="email" name="email" required placeholder="Email">
-                            <i class="fas fa-envelope"></i>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <div class="input-with-icon">
-                            <input type="password" id="password" name="password" required placeholder="Password">
-                            <i class="fas fa-lock"></i>
-                        </div>
-                    </div>
-                    <div id="login-error" class="error-message"></div>
-                    <button type="submit" class="login-button" onclick="handleLogin(event)">
-                        <span>Log In</span>
-                    </button>
-
-                    <div class="divider">
-                        <span>OR</span>
-                    </div>
-
-                    <div class="social-login">
-                        <button type="button" class="social-login-button google-login">
-                            <i class="fab fa-google"></i>
-                            <span>Continue with Google</span>
-                        </button>
-                    </div>
-
-                    <a href="#" id="forgotPasswordLink" class="forgot-password">Forgot password?</a>
-                </form>
+            <div class="login-header">
+                <h1>Welcome Back</h1>
+                <p>Sign in to continue your study streak</p>
             </div>
-
-            <div class="signup-box">
-                <p>Don't have an account? <a href="#" id="showRegisterForm">Sign up</a></p>
-            </div>
-
-            <div class="app-download">
-                <p>Get our mobile app</p>
-                <div class="store-buttons">
-                    <a href="#" class="store-button">
-                        <i class="fab fa-apple"></i>
-                        <span>App Store</span>
-                    </a>
-                    <a href="#" class="store-button">
-                        <i class="fab fa-google-play"></i>
-                        <span>Google Play</span>
-                    </a>
+            
+            <div id="login-error" class="error-message"></div>
+            
+            <form id="loginForm" class="login-form">
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" required placeholder="Enter your email">
                 </div>
+                
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required placeholder="Enter your password">
+                </div>
+                
+                <button type="submit" class="login-btn">Log In</button>
+            </form>
+            
+            <div class="login-footer">
+                <p>Don't have an account? <a href="#" id="showRegisterForm">Sign Up</a></p>
+                <p><a href="#" id="forgotPasswordLink">Forgot Password?</a></p>
             </div>
         </div>
     </div>
-
+    
     <!-- Registration Modal -->
     <div class="modal" id="registerModal">
         <div class="modal-content">
             <span class="close-modal">&times;</span>
             <h2>Create Account</h2>
+            <div id="register-error" class="error-message"></div>
             <form id="registerForm">
                 <div class="form-group">
-                    <div class="input-with-icon">
-                        <input type="text" id="register-username" required placeholder="Username">
-                        <i class="fas fa-user"></i>
-                    </div>
+                    <label for="register-username">Username</label>
+                    <input type="text" id="register-username" required>
                 </div>
                 <div class="form-group">
-                    <div class="input-with-icon">
-                        <input type="email" id="register-email" required placeholder="Email">
-                        <i class="fas fa-envelope"></i>
-                    </div>
+                    <label for="register-email">Email</label>
+                    <input type="email" id="register-email" required>
                 </div>
                 <div class="form-group">
-                    <div class="input-with-icon">
-                        <input type="tel" id="register-phone" required placeholder="Phone Number">
-                        <i class="fas fa-phone"></i>
-                    </div>
+                    <label for="register-password">Password</label>
+                    <input type="password" id="register-password" required>
                 </div>
                 <div class="form-group">
-                    <div class="input-with-icon">
-                        <input type="password" id="register-password" required placeholder="Password">
-                        <i class="fas fa-lock"></i>
-                    </div>
+                    <label for="register-confirm-password">Confirm Password</label>
+                    <input type="password" id="register-confirm-password" required>
                 </div>
                 <div class="form-group">
-                    <div class="input-with-icon">
-                        <input type="password" id="register-confirm-password" required placeholder="Confirm Password">
-                        <i class="fas fa-lock"></i>
-                    </div>
+                    <label for="register-phone">Phone Number</label>
+                    <input type="tel" id="register-phone" required>
                 </div>
                 <div class="form-group">
-                    <select id="register-security-question" required>
-                        <option value="">Select a Security Question</option>
-                        <option value="pet">What was your first pet's name?</option>
-                        <option value="school">What was the name of your first school?</option>
-                        <option value="city">In which city were you born?</option>
-                        <option value="mother">What is your mother's maiden name?</option>
-                    </select>
+                    <label for="register-security-question">Security Question</label>
+                    <input type="text" id="register-security-question" required placeholder="Enter a security question">
                 </div>
                 <div class="form-group">
-                    <div class="input-with-icon">
-                        <input type="text" id="register-security-answer" required placeholder="Security Answer">
-                        <i class="fas fa-shield-alt"></i>
-                    </div>
+                    <label for="register-security-answer">Security Answer</label>
+                    <input type="text" id="register-security-answer" required placeholder="Enter your answer">
                 </div>
-                <div class="form-group">
-                    <label class="checkbox-container">
-                        <input type="checkbox" id="register-reminders">
-                        Enable SMS reminders
-                        <span class="checkmark"></span>
-                    </label>
-                </div>
-                <div id="register-error" class="error-message"></div>
-                <button type="submit" class="login-button">Create Account</button>
+                <button type="submit" class="login-btn">Create Account</button>
             </form>
         </div>
     </div>
-
+    
     <!-- Password Recovery Modal -->
     <div class="modal" id="recoveryModal">
         <div class="modal-content">
             <span class="close-modal">&times;</span>
-            <h2>Reset Password</h2>
+            <h2>Password Recovery</h2>
+            <div id="recovery-error" class="error-message"></div>
             <form id="recoveryForm">
                 <div class="form-group">
-                    <div class="input-with-icon">
-                        <input type="email" id="recovery-email" required placeholder="Enter your email">
-                        <i class="fas fa-envelope"></i>
-                    </div>
+                    <label for="recovery-email">Email</label>
+                    <input type="email" id="recovery-email" required>
                 </div>
                 <div id="security-question-container" style="display: none;">
-                    <p id="security-question-text" class="security-question"></p>
+                    <p id="security-question-text"></p>
                     <div class="form-group">
-                        <div class="input-with-icon">
-                            <input type="text" id="security-answer" required placeholder="Your Answer">
-                            <i class="fas fa-shield-alt"></i>
-                        </div>
+                        <label for="security-answer">Answer</label>
+                        <input type="text" id="security-answer" required>
                     </div>
                     <div class="form-group">
-                        <div class="input-with-icon">
-                            <input type="password" id="new-password" required placeholder="New Password">
-                            <i class="fas fa-lock"></i>
-                        </div>
+                        <label for="new-password">New Password</label>
+                        <input type="password" id="new-password" required>
                     </div>
                     <div class="form-group">
-                        <div class="input-with-icon">
-                            <input type="password" id="confirm-new-password" required placeholder="Confirm New Password">
-                            <i class="fas fa-lock"></i>
-                        </div>
+                        <label for="confirm-new-password">Confirm New Password</label>
+                        <input type="password" id="confirm-new-password" required>
                     </div>
                 </div>
-                <div id="recovery-error" class="error-message"></div>
-                <button type="submit" class="login-button" id="recovery-submit">Continue</button>
-            </form>
-        </div>
-    </div>
-
-    <!-- Phone Verification Modal -->
-    <div class="modal" id="verificationModal">
-        <div class="modal-content">
-            <span class="close-modal">&times;</span>
-            <h2>Verify Phone Number</h2>
-            <p>We've sent a verification code to your phone number.</p>
-            <form id="verificationForm">
-                <div class="form-group">
-                    <div class="input-with-icon">
-                        <input type="text" id="verification-code" required placeholder="Enter 6-digit code">
-                        <i class="fas fa-key"></i>
-                    </div>
-                </div>
-                <button type="submit" class="login-button">Verify</button>
-                <button type="button" class="resend-button">Resend Code</button>
-                <div id="verification-error" class="error-message"></div>
+                <button type="submit" class="login-btn">Reset Password</button>
             </form>
         </div>
     </div>
